@@ -1,0 +1,231 @@
+:root {
+  color-scheme: light;
+  --bg: #f3efe6;
+  --card: #fffdf8;
+  --ink: #1c1915;
+  --muted: #6f675e;
+  --line: #e4dccf;
+  --income: #1d6b45;
+  --expense: #b8432f;
+  --warn: #a16207;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.app {
+  width: min(720px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 28px 0 48px;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1, h2 { margin: 0; font-weight: 600; }
+h1 { font-size: 32px; letter-spacing: -0.03em; }
+h2 { font-size: 18px; margin-bottom: 12px; }
+
+.month {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px;
+}
+
+.month strong {
+  min-width: 148px;
+  text-align: center;
+  font-size: 14px;
+  text-transform: capitalize;
+}
+
+button, input, select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  border: 0;
+  background: var(--ink);
+  color: #f6f1e7;
+  border-radius: 999px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.month button, .row button {
+  background: transparent;
+  color: var(--ink);
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+.row button {
+  width: auto;
+  padding: 6px 10px;
+  color: var(--expense);
+  font-size: 13px;
+}
+
+button:hover { opacity: 0.88; }
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.totals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.totals article, .card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+
+.totals article { padding: 14px; }
+.totals span, .muted, .available, #cap-note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.totals strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 22px;
+  letter-spacing: -0.03em;
+}
+
+.available { margin: 0 0 14px; }
+
+.card { padding: 16px; margin-bottom: 14px; }
+
+.cap-head, label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.cap-head {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+input, select {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 16px;
+}
+
+.cap-head input { max-width: 180px; }
+
+.track {
+  margin-top: 12px;
+  height: 10px;
+  background: #efe8dc;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+#cap-fill {
+  height: 100%;
+  width: 0;
+  background: var(--income);
+  border-radius: inherit;
+}
+
+#cap-fill.warn { background: var(--warn); }
+#cap-fill.over { background: var(--expense); }
+
+#cap-note { margin: 8px 0 0; }
+
+form { display: grid; gap: 12px; }
+form h2 { margin-bottom: 0; }
+
+.segment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.segment label {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.segment input { width: auto; }
+
+form button { justify-self: start; }
+
+.error { margin: 0; color: var(--expense); font-size: 14px; }
+
+ul { list-style: none; margin: 0; padding: 0; }
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.row strong { display: block; }
+.row > div:last-child {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.row span { color: var(--muted); font-size: 13px; }
+.amount { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.amount.income { color: var(--income); }
+.amount.expense { color: var(--expense); }
+.positive { color: var(--income); }
+.negative { color: var(--expense); }
+
+@media (max-width: 640px) {
+  .top, .cap-head { align-items: stretch; flex-direction: column; }
+  .totals { grid-template-columns: 1fr; }
+  .cap-head input { max-width: none; }
+  h1 { font-size: 28px; }
+}
