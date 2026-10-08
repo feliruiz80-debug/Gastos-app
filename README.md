@@ -1,39 +1,34 @@
-# Gastos-app
-# Control de Gastos
+# Gastos
 
-Aplicación web para registrar, organizar y controlar los ingresos y gastos personales.
+Aplicación web para ver ingresos, gastos, cuentas y presupuestos personales. Los datos salen de una hoja pública de Google Sheets: cada vez que se abre o se toca **Actualizar**, la app vuelve a leer la hoja.
 
-## Objetivo
+Hoja: [gastos](https://docs.google.com/spreadsheets/d/18TgchNsA-EMDeGPJdAB3WffqJ02viOL6/edit?gid=1335016283#gid=1335016283)
 
-Crear una aplicación simple, rápida y moderna que permita:
+## Qué muestra
 
-* Registrar ingresos.
-* Registrar gastos.
-* Clasificar gastos por categorías.
-* Ver cuánto dinero ingresa y cuánto se gasta.
-* Consultar el saldo disponible.
-* Llevar un historial de movimientos.
-* Visualizar la información de forma clara y sencilla.
+- Resumen del período: ingresos, gastos, resultado y saldo disponible.
+- Gráfico mensual del año. Al tocar un mes se filtra el resto de la app.
+- Historial de movimientos, con búsqueda y filtros por tipo, categoría y cuenta.
+- Saldo por cuenta: saldo inicial de la pestaña Config, más ingresos, menos gastos.
+- Categorías de gasto contra el presupuesto mensual (o el anual, si el filtro es todo el año).
 
-## Tecnologías
+Los montos se cargan en positivo en la hoja. La columna **Tipo** define si suma o resta.
 
-* Frontend: por definir
-* Base de datos: por definir
-* Hosting: Vercel
-* Repositorio: GitHub
-* Desarrollo: Cursor
+## Cómo se cargan los datos
 
-## Estado
+Se edita la hoja, no la app.
 
-🚧 Proyecto en desarrollo.
+- `Movimientos`: ID, Fecha, Tipo, Categoría, Descripción, Monto, Cuenta, Notas.
+- `Config`: tipos, categorías, presupuesto mensual y saldo inicial de cada cuenta.
 
-## Próximos pasos
+Las pestañas `Resumen` y `Cuentas` de la hoja siguen sirviendo dentro de Sheets. La app recalcula esos totales a partir de Movimientos y Config.
 
-1. Diseñar la interfaz.
-2. Crear el sistema de ingresos y gastos.
-3. Crear categorías.
-4. Implementar el cálculo automático del saldo.
-5. Agregar historial de movimientos.
-6. Agregar estadísticas y gráficos.
-7. Conectar base de datos.
-8. Publicar la versión inicial.
+## Desarrollo
+
+```bash
+npm install
+npm test
+npm run dev
+```
+
+La app queda en `http://localhost:5173`. En local, Vite responde `/api/sheets`. En Vercel, la misma ruta la resuelve `api/sheets.ts`.
