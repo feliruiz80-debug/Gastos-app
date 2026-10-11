@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --color-paper: #f3eee6;
+  --color-paper-deep: #e6dfd2;
+  --color-card: #fffdf9;
+  --color-ink: #1c1714;
+  --color-muted: #6f675f;
+  --color-line: #e4d9c8;
+  --color-income: #1b7f4e;
+  --color-expense: #9a3412;
+}
+
+body {
+  background-color: var(--color-paper);
+  background-image: radial-gradient(rgba(28, 23, 20, 0.045) 0.7px, transparent 0.7px);
+  background-size: 18px 18px;
+  color: var(--color-ink);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
