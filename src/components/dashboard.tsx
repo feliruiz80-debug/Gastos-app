@@ -105,10 +105,20 @@ export function Dashboard(props: DashboardProps) {
 
   return (
     <div className="mx-auto min-h-screen max-w-6xl px-4 py-6 pb-28 sm:px-6 sm:py-10 sm:pb-10">
-      <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-sm font-medium tracking-wide text-muted">Finanzas personales</p>
-          <h1 className="font-display text-4xl tracking-tight sm:text-5xl">Control de Gastos</h1>
+      <header className="space-y-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-medium tracking-wide text-muted">Finanzas personales</p>
+            <h1 className="font-display text-4xl tracking-tight sm:text-5xl">Control de Gastos</h1>
+          </div>
+          <div className="hidden gap-2 sm:flex">
+            <button type="button" onClick={() => onAdd("income")} className="rounded-full bg-income px-4 py-2.5 text-sm font-semibold text-white">
+              Nuevo ingreso
+            </button>
+            <button type="button" onClick={() => onAdd("expense")} className="rounded-full bg-expense px-4 py-2.5 text-sm font-semibold text-white">
+              Nuevo gasto
+            </button>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {scope === "month" ? (
@@ -189,12 +199,6 @@ export function Dashboard(props: DashboardProps) {
               if (file) onImport(file);
             }}
           />
-          <button type="button" onClick={() => onAdd("income")} className="hidden rounded-full bg-income px-4 py-2.5 text-sm font-semibold text-white sm:inline-flex">
-            Nuevo ingreso
-          </button>
-          <button type="button" onClick={() => onAdd("expense")} className="hidden rounded-full bg-expense px-4 py-2.5 text-sm font-semibold text-white sm:inline-flex">
-            Nuevo gasto
-          </button>
         </div>
       </header>
 
