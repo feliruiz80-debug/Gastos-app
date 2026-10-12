@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { positionValue, type MarketSnapshot } from "@/lib/market";
+import { positionValue, preferLocalSymbol, type MarketSnapshot } from "@/lib/market";
 import { amountToInput, formatMoney, parseAmount, parseBudget, parseUnits } from "@/lib/money";
 import type { Investment, InvestmentKind } from "@/lib/types";
 import { DonutChart } from "./donut-chart";
@@ -19,7 +19,7 @@ type InvestmentsViewProps = {
   investments: Investment[];
   onSave: (investment: Investment) => string | null;
   onDelete: (id: string) => void;
-  onApplyQuotes: (quotes: { symbol: string; priceArs: number }[]) => number;
+  onApplyQuotes: (quotes: { symbol: string; resolvedSymbol?: string; priceArs: number }[]) => number;
 };
 
 export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }: InvestmentsViewProps) {
@@ -91,7 +91,13 @@ export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }
     setMarketNote("Leyendo el mercado…");
     try {
       const snapshot = await fetchQuotes(tracked.map((item) => item.symbol));
-      const updated = onApplyQuotes(snapshot.quotes.map((quote) => ({ symbol: quote.symbol, priceArs: quote.priceArs })));
+      const updated = onApplyQuotes(
+        snapshot.quotes.map((quote) => ({
+          symbol: quote.symbol,
+          resolvedSymbol: quote.resolvedSymbol,
+          priceArs: quote.priceArs,
+        })),
+      );
       const missing = snapshot.missing.length ? ` Sin dato: ${snapshot.missing.join(", ")}.` : "";
       const warning = snapshot.warning ? ` ${snapshot.warning}` : "";
       setMarketNote(
@@ -124,11 +130,14 @@ export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }
         setError(snapshot.missing[0] ? `No encontré ${snapshot.missing[0]}.` : "Ese símbolo no tiene precio.");
         return;
       }
-      setCurrentValue(amountToInput(positionValue(quantity, quote.priceArs)));
+      setSymbol(quote.resolvedSymbol);
+      const total = positionValue(quantity, quote.priceArs);
+      setCurrentValue(amountToInput(total));
+      const unit = formatMoney(quote.priceArs);
       setMarketNote(
         quote.currency === "USD" && snapshot.mep
-          ? `Precio en dólares, pasado a pesos con el MEP ${formatMoney(snapshot.mep)}.`
-          : "Precio traído del mercado.",
+          ? `${quote.resolvedSymbol}: ${unit} c/u (dólar × MEP ${formatMoney(snapshot.mep)}). Total ${formatMoney(total)}.`
+          : `${quote.resolvedSymbol}: ${unit} c/u × ${quantity} = ${formatMoney(total)}.`,
       );
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo leer el mercado.");
@@ -145,7 +154,13 @@ export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }
     void fetchQuotes(tracked.map((item) => item.symbol))
       .then((snapshot) => {
         if (cancelled) return;
-        const updated = onApplyQuotes(snapshot.quotes.map((quote) => ({ symbol: quote.symbol, priceArs: quote.priceArs })));
+        const updated = onApplyQuotes(
+          snapshot.quotes.map((quote) => ({
+            symbol: quote.symbol,
+            resolvedSymbol: quote.resolvedSymbol,
+            priceArs: quote.priceArs,
+          })),
+        );
         if (updated > 0) setMarketNote("Valores actualizados con el mercado.");
         else if (snapshot.warning) setMarketNote(snapshot.warning);
       })
@@ -178,7 +193,7 @@ export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }
       setError("El valor actual tiene que ser un monto.");
       return;
     }
-    const ticker = symbol.trim().toUpperCase();
+    const ticker = symbol.trim() ? preferLocalSymbol(symbol, kind) : "";
     const quantity = units.trim() ? parseUnits(units) : 0;
     if (ticker && !/^[A-Z0-9][A-Z0-9.-]*$/.test(ticker)) {
       setError("El símbolo solo puede tener letras, números, punto o guion.");
@@ -281,7 +296,7 @@ export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }
             <input
               value={symbol}
               maxLength={15}
-              placeholder="AAPL.BA, GGAL.BA, BTC"
+              placeholder="MELI.BA, GGAL.BA, BTC"
               onChange={(event) => setSymbol(event.target.value.toUpperCase())}
               className="mt-1 w-full rounded-2xl border border-line bg-card/80 px-3 py-2.5 text-ink outline-none"
             />
@@ -306,7 +321,7 @@ export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }
           </button>
         </div>
         <p className="text-sm text-muted">
-          CEDEARs y acciones de ByMA con .BA (AAPL.BA, GGAL.BA). Cripto, BTC o ETH. Dólares y cripto se pasan a pesos con el dólar MEP.
+          CEDEAR o acción: MELI o MELI.BA (ByMA en pesos). Si ponés solo MELI, usa el precio local, no el de Wall Street. Cripto: BTC o ETH.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm text-muted">
@@ -358,6 +373,8 @@ export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }
         {investments.map((investment) => {
           const kindLabel = KINDS.find((item) => item.id === investment.kind);
           const result = investment.currentValue - investment.invested;
+          const unitPrice =
+            investment.symbol && investment.units > 0 ? investment.currentValue / investment.units : null;
           return (
             <li key={investment.id} className="glass flex items-center gap-3 rounded-3xl px-4 py-3">
               <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: kindLabel?.color }} />
@@ -365,7 +382,11 @@ export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }
                 <span className="block truncate font-medium">{investment.name}</span>
                 <span className="block truncate text-sm text-muted">
                   {kindLabel?.label}
-                  {investment.symbol ? ` · ${investment.symbol}${investment.units ? ` × ${investment.units}` : ""}` : ""}
+                  {investment.symbol
+                    ? ` · ${investment.symbol}${investment.units ? ` × ${investment.units}` : ""}${
+                        unitPrice ? ` · ${formatMoney(unitPrice)} c/u` : ""
+                      }`
+                    : ""}
                   {investment.note ? ` · ${investment.note}` : ""} · puesto {formatMoney(investment.invested)}
                 </span>
               </span>
