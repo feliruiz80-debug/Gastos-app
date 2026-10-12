@@ -201,8 +201,8 @@ export function Dashboard(props: DashboardProps) {
                   key={item.account.id}
                   type="button"
                   onClick={() => onAccountFilter(accountFilter === item.account.id ? "all" : item.account.id)}
-                  className={`rounded-3xl border bg-card p-4 text-left ${
-                    accountFilter === item.account.id ? "border-ink" : "border-line"
+                  className={`glass rounded-3xl p-4 text-left ${
+                    accountFilter === item.account.id ? "border-ink" : ""
                   }`}
                 >
                   <p className="flex items-center gap-2 text-sm text-muted">

@@ -2,7 +2,6 @@
 
 import { useRef } from "react";
 import { ThemeToggle } from "./theme-toggle";
-import { UpdateButton } from "./update-button";
 
 type SettingsViewProps = {
   syncing: boolean;
@@ -28,9 +27,8 @@ export function SettingsView(props: SettingsViewProps) {
 
       <section className="glass mt-6 rounded-3xl p-5">
         <h2 className="font-display text-2xl tracking-tight">Apariencia</h2>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
+        <div className="mt-4">
           <ThemeToggle />
-          <UpdateButton />
         </div>
       </section>
 

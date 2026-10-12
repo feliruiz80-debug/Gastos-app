@@ -7,6 +7,12 @@ const themeScript = `(function(){try{var t=localStorage.getItem("gastos-tema");i
 export const metadata: Metadata = {
   title: "Gastos",
   description: "Ingresos, gastos, cuentas y presupuestos personales en pesos.",
+  applicationName: "Gastos",
+  appleWebApp: {
+    capable: true,
+    title: "Gastos",
+    statusBarStyle: "default",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

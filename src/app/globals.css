@@ -49,21 +49,22 @@
 
 body {
   background-color: var(--paper);
-  background-image: radial-gradient(var(--grain) 0.7px, transparent 0.7px);
-  background-size: 18px 18px;
+  background-image:
+    radial-gradient(900px 520px at 0% -10%, color-mix(in srgb, var(--income) 24%, transparent), transparent 62%),
+    radial-gradient(760px 460px at 100% 0%, color-mix(in srgb, var(--expense) 18%, transparent), transparent 58%),
+    radial-gradient(var(--grain) 0.7px, transparent 0.7px);
+  background-attachment: fixed;
+  background-size: auto, auto, 18px 18px;
   color: var(--ink);
 }
 
-article {
-  box-shadow: var(--shadow);
-}
-
+article:not(.bg-ink),
 .glass {
-  background: color-mix(in srgb, var(--card) 68%, transparent);
+  background: color-mix(in srgb, var(--card) 58%, transparent);
   border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(22px) saturate(1.35);
-  -webkit-backdrop-filter: blur(22px) saturate(1.35);
+  backdrop-filter: blur(22px) saturate(1.45);
+  -webkit-backdrop-filter: blur(22px) saturate(1.45);
 }
 
 button,

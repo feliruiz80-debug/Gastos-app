@@ -62,10 +62,3 @@ export function UpdateCartel() {
   );
 }
 
-export function UpdateButton() {
-  return (
-    <button type="button" onClick={reloadApp} className="rounded-full border border-line bg-card px-3 py-1.5 text-sm font-semibold">
-      Actualizar
-    </button>
-  );
-}
