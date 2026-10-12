@@ -29,6 +29,7 @@ const CRYPTO_IDS: Record<string, string> = {
 
 export type MarketQuote = {
   symbol: string;
+  resolvedSymbol: string;
   price: number;
   currency: "ARS" | "USD";
   priceArs: number;
@@ -45,6 +46,23 @@ export function normalizeSymbol(raw: string): string | null {
   const symbol = raw.trim().toUpperCase();
   if (!symbol || symbol.length > 15 || !/^[A-Z0-9][A-Z0-9.-]*$/.test(symbol)) return null;
   return symbol;
+}
+
+/** CEDEARs y acciones locales en Yahoo van con .BA (MELI → MELI.BA). */
+export function bymaSymbol(symbol: string): string | null {
+  const normalized = normalizeSymbol(symbol);
+  if (!normalized || cryptoIdFor(normalized)) return null;
+  if (normalized.includes(".")) return null;
+  const local = `${normalized}.BA`;
+  return normalizeSymbol(local);
+}
+
+/** Para CEDEAR/acción sin mercado, guarda el ticker de ByMA. */
+export function preferLocalSymbol(raw: string, kind: "cedear" | "acciones" | string): string {
+  const symbol = normalizeSymbol(raw);
+  if (!symbol) return raw.trim().toUpperCase();
+  if (kind !== "cedear" && kind !== "acciones") return symbol;
+  return bymaSymbol(symbol) ?? symbol;
 }
 
 export function cryptoIdFor(symbol: string): string | null {
@@ -121,6 +139,18 @@ async function readYahoo(symbol: string): Promise<{ price: number; currency: "AR
   }
 }
 
+/** Primero ByMA (.BA); si no hay, el ticker de afuera. Así MELI no se confunde con NASDAQ. */
+async function readEquity(symbol: string): Promise<{ resolvedSymbol: string; quote: { price: number; currency: "ARS" | "USD" } } | null> {
+  const local = bymaSymbol(symbol);
+  if (local) {
+    const byma = await readYahoo(local);
+    if (byma) return { resolvedSymbol: local, quote: byma };
+  }
+  const quote = await readYahoo(symbol);
+  if (!quote) return null;
+  return { resolvedSymbol: symbol, quote };
+}
+
 async function readCrypto(ids: string[]): Promise<Map<string, number>> {
   const prices = new Map<string, number>();
   if (ids.length === 0) return prices;
@@ -150,7 +180,7 @@ export async function loadQuotes(rawSymbols: string[]): Promise<MarketSnapshot> 
   const [mep, cryptoPrices, equityPrices] = await Promise.all([
     readMep(),
     readCrypto(cryptoIds),
-    Promise.all(equitySymbols.map(async (symbol) => ({ symbol, quote: await readYahoo(symbol) }))),
+    Promise.all(equitySymbols.map(async (symbol) => ({ symbol, resolved: await readEquity(symbol) }))),
   ]);
 
   const quotes: MarketQuote[] = [];
@@ -161,13 +191,21 @@ export async function loadQuotes(rawSymbols: string[]): Promise<MarketSnapshot> 
     const usd = id ? cryptoPrices.get(id) : undefined;
     const priceArs = usd ? priceInArs(usd, "USD", mep) : null;
     if (!usd || priceArs === null) missing.push(symbol);
-    else quotes.push({ symbol, price: usd, currency: "USD", priceArs });
+    else quotes.push({ symbol, resolvedSymbol: symbol, price: usd, currency: "USD", priceArs });
   }
 
   for (const item of equityPrices) {
-    const priceArs = item.quote ? priceInArs(item.quote.price, item.quote.currency, mep) : null;
-    if (!item.quote || priceArs === null) missing.push(item.symbol);
-    else quotes.push({ symbol: item.symbol, price: item.quote.price, currency: item.quote.currency, priceArs });
+    const priceArs = item.resolved ? priceInArs(item.resolved.quote.price, item.resolved.quote.currency, mep) : null;
+    if (!item.resolved || priceArs === null) missing.push(item.symbol);
+    else {
+      quotes.push({
+        symbol: item.symbol,
+        resolvedSymbol: item.resolved.resolvedSymbol,
+        price: item.resolved.quote.price,
+        currency: item.resolved.quote.currency,
+        priceArs,
+      });
+    }
   }
 
   const warning = mep === null ? "No se pudo leer el dólar MEP. Los precios en dólares quedan sin actualizar." : null;

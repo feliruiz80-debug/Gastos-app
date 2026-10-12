@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { cryptoIdFor, normalizeSymbol, positionValue, priceInArs } from "./market";
+import { bymaSymbol, cryptoIdFor, normalizeSymbol, positionValue, preferLocalSymbol, priceInArs } from "./market";
 
 describe("precios de mercado", () => {
   it("pasa dólares a pesos con el MEP y deja los pesos como están", () => {
@@ -13,6 +13,7 @@ describe("precios de mercado", () => {
   it("calcula el valor de la tenencia", () => {
     assert.equal(positionValue(2, 1500.126), 3000.25);
     assert.equal(positionValue(0, 10), 0);
+    assert.equal(positionValue(10, 25380), 253800);
   });
 
   it("reconoce símbolos y cripto", () => {
@@ -21,5 +22,14 @@ describe("precios de mercado", () => {
     assert.equal(cryptoIdFor("BTC"), "bitcoin");
     assert.equal(cryptoIdFor("ETH-USD"), "ethereum");
     assert.equal(cryptoIdFor("GGAL.BA"), null);
+  });
+
+  it("manda CEDEARs al ticker de ByMA y no al de Wall Street", () => {
+    assert.equal(bymaSymbol("MELI"), "MELI.BA");
+    assert.equal(bymaSymbol("meli.ba"), null);
+    assert.equal(bymaSymbol("BTC"), null);
+    assert.equal(preferLocalSymbol("MELI", "cedear"), "MELI.BA");
+    assert.equal(preferLocalSymbol("GGAL", "acciones"), "GGAL.BA");
+    assert.equal(preferLocalSymbol("BTC", "cripto"), "BTC");
   });
 });
