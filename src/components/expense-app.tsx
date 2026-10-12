@@ -346,19 +346,25 @@ export function ExpenseApp() {
     showToast("Inversión eliminada");
   }
 
-  function applyMarketQuotes(quotes: { symbol: string; priceArs: number }[]) {
+  function applyMarketQuotes(quotes: { symbol: string; resolvedSymbol?: string; priceArs: number }[]) {
     const current = dataRef.current;
     if (!current || quotes.length === 0) return 0;
-    const prices = new Map(quotes.map((quote) => [quote.symbol.toUpperCase(), quote.priceArs]));
+    const prices = new Map(
+      quotes.map((quote) => [
+        quote.symbol.toUpperCase(),
+        { priceArs: quote.priceArs, resolvedSymbol: (quote.resolvedSymbol || quote.symbol).toUpperCase() },
+      ]),
+    );
     let updated = 0;
     const investments = (current.investments ?? []).map((item) => {
       if (!item.symbol || !item.units) return item;
-      const priceArs = prices.get(item.symbol.toUpperCase());
-      if (!priceArs) return item;
-      const currentValue = positionValue(item.units, priceArs);
-      if (currentValue === item.currentValue) return item;
+      const quote = prices.get(item.symbol.toUpperCase());
+      if (!quote) return item;
+      const currentValue = positionValue(item.units, quote.priceArs);
+      const symbol = quote.resolvedSymbol;
+      if (currentValue === item.currentValue && symbol === item.symbol) return item;
       updated += 1;
-      return { ...item, currentValue };
+      return { ...item, symbol, currentValue };
     });
     if (updated > 0) commit({ ...current, investments });
     return updated;
