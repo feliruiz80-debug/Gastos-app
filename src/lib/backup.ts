@@ -85,7 +85,7 @@ function cleanTransaction(value: unknown): Transaction | null {
   };
 }
 
-const KINDS: InvestmentKind[] = ["plazo", "acciones", "fondo", "cripto", "otro"];
+const KINDS: InvestmentKind[] = ["plazo", "acciones", "cedear", "fondo", "cripto", "otro"];
 
 function isKind(value: unknown): value is InvestmentKind {
   return typeof value === "string" && KINDS.includes(value as InvestmentKind);

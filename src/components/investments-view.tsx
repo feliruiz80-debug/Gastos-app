@@ -9,6 +9,7 @@ import { DonutChart } from "./donut-chart";
 const KINDS: { id: InvestmentKind; label: string; color: string }[] = [
   { id: "plazo", label: "Plazo fijo", color: "#1d4ed8" },
   { id: "acciones", label: "Acciones", color: "#157a45" },
+  { id: "cedear", label: "CEDEAR", color: "#0f766e" },
   { id: "fondo", label: "Fondo", color: "#7c3aed" },
   { id: "cripto", label: "Cripto", color: "#b45309" },
   { id: "otro", label: "Otro", color: "#57534e" },
@@ -24,7 +25,7 @@ type InvestmentsViewProps = {
 export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }: InvestmentsViewProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
-  const [kind, setKind] = useState<InvestmentKind>("acciones");
+  const [kind, setKind] = useState<InvestmentKind>("cedear");
   const [invested, setInvested] = useState("");
   const [currentValue, setCurrentValue] = useState("");
   const [note, setNote] = useState("");
@@ -47,7 +48,7 @@ export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }
   function reset() {
     setEditingId(null);
     setName("");
-    setKind("acciones");
+    setKind("cedear");
     setInvested("");
     setCurrentValue("");
     setNote("");
@@ -107,7 +108,7 @@ export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }
     const ticker = symbol.trim();
     const quantity = parseUnits(units);
     if (!ticker) {
-      setError("Poné el símbolo, por ejemplo GGAL.BA, AAPL o BTC.");
+      setError("Poné el símbolo, por ejemplo AAPL.BA, GGAL.BA o BTC.");
       return;
     }
     if (!quantity) {
@@ -256,7 +257,7 @@ export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }
         <input
           value={name}
           maxLength={60}
-          placeholder="Nombre, por ejemplo GGAL o plazo fijo"
+          placeholder="Nombre, por ejemplo Apple CEDEAR o plazo fijo"
           onChange={(event) => setName(event.target.value)}
           className="w-full rounded-2xl border border-line bg-card/80 px-3 py-2.5 outline-none"
           aria-label="Nombre de la inversión"
@@ -280,7 +281,7 @@ export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }
             <input
               value={symbol}
               maxLength={15}
-              placeholder="GGAL.BA, AAPL, BTC"
+              placeholder="AAPL.BA, GGAL.BA, BTC"
               onChange={(event) => setSymbol(event.target.value.toUpperCase())}
               className="mt-1 w-full rounded-2xl border border-line bg-card/80 px-3 py-2.5 text-ink outline-none"
             />
@@ -305,7 +306,7 @@ export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }
           </button>
         </div>
         <p className="text-sm text-muted">
-          Acciones de Argentina con .BA (GGAL.BA). De afuera, el ticker (AAPL). Cripto, BTC o ETH. Dólares y cripto se pasan a pesos con el dólar MEP.
+          CEDEARs y acciones de ByMA con .BA (AAPL.BA, GGAL.BA). Cripto, BTC o ETH. Dólares y cripto se pasan a pesos con el dólar MEP.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm text-muted">

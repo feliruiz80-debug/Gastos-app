@@ -54,12 +54,15 @@ describe("respaldo", () => {
       investments: [
         { id: "inv-1", name: "Galicia", kind: "acciones", invested: 1000, currentValue: 1200, note: "", symbol: "ggal.ba", units: 10 },
         { id: "inv-2", name: "Plazo", kind: "plazo", invested: 5000, currentValue: 5200, note: "" },
+        { id: "inv-3", name: "Apple", kind: "cedear", invested: 2000, currentValue: 2400, note: "", symbol: "aapl.ba", units: 5 },
       ],
     });
     assert.equal(sanitized?.investments[0]?.symbol, "GGAL.BA");
     assert.equal(sanitized?.investments[0]?.units, 10);
     assert.equal(sanitized?.investments[1]?.symbol, "");
     assert.equal(sanitized?.investments[1]?.units, 0);
+    assert.equal(sanitized?.investments[2]?.kind, "cedear");
+    assert.equal(sanitized?.investments[2]?.symbol, "AAPL.BA");
   });
 
   it("rechaza archivos que no son un respaldo", () => {
