@@ -36,6 +36,8 @@ export type Investment = {
   invested: number;
   currentValue: number;
   note: string;
+  symbol: string;
+  units: number;
 };
 
 export type AppData = {

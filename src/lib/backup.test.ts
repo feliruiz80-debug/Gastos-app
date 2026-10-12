@@ -47,6 +47,21 @@ describe("respaldo", () => {
     assert.equal(sanitized?.transactions[0]?.accountId, sanitized?.accounts[0]?.id);
   });
 
+  it("conserva símbolo y cantidad, y completa las inversiones viejas", () => {
+    const sanitized = sanitizeData({
+      categories: [{ id: "cat-super", name: "Supermercado", type: "expense", color: "#c4491d" }],
+      transactions: [],
+      investments: [
+        { id: "inv-1", name: "Galicia", kind: "acciones", invested: 1000, currentValue: 1200, note: "", symbol: "ggal.ba", units: 10 },
+        { id: "inv-2", name: "Plazo", kind: "plazo", invested: 5000, currentValue: 5200, note: "" },
+      ],
+    });
+    assert.equal(sanitized?.investments[0]?.symbol, "GGAL.BA");
+    assert.equal(sanitized?.investments[0]?.units, 10);
+    assert.equal(sanitized?.investments[1]?.symbol, "");
+    assert.equal(sanitized?.investments[1]?.units, 0);
+  });
+
   it("rechaza archivos que no son un respaldo", () => {
     assert.equal(sanitizeData(null), null);
     assert.equal(sanitizeData({ categories: "no" }), null);

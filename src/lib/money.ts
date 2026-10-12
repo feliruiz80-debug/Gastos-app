@@ -69,6 +69,17 @@ export function parseAmount(input: string): number | null {
   return Math.round(value * 100) / 100;
 }
 
+/** Cantidad de acciones o cripto: 10, 0,25 o 0.004. */
+export function parseUnits(input: string): number | null {
+  const raw = input.trim().replace(/\s/g, "");
+  if (!raw) return null;
+  const normalized = raw.replace(",", ".");
+  if (!/^\d+(\.\d{1,8})?$/.test(normalized)) return null;
+  const value = Number(normalized);
+  if (!Number.isFinite(value) || value <= 0 || value > 1_000_000_000) return null;
+  return Math.round(value * 1e8) / 1e8;
+}
+
 export function parseBudget(input: string): number | null {
   const trimmed = input.trim();
   if (!trimmed || trimmed === "0") return 0;

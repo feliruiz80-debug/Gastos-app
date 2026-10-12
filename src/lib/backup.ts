@@ -104,7 +104,24 @@ function cleanInvestment(value: unknown): Investment | null {
   if (invested === null || currentValue === null || invested <= 0) return null;
   const note = typeof investment.note === "string" ? investment.note.trim() : "";
   if (note.length > MAX_NOTE) return null;
-  return { id: investment.id, name, kind: investment.kind, invested, currentValue, note };
+  const symbol = cleanSymbol(investment.symbol);
+  const units = cleanUnits(investment.units);
+  if (units === null) return null;
+  return { id: investment.id, name, kind: investment.kind, invested, currentValue, note, symbol, units };
+}
+
+function cleanSymbol(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const symbol = value.trim().toUpperCase();
+  if (!symbol) return "";
+  if (symbol.length > 15 || !/^[A-Z0-9][A-Z0-9.-]*$/.test(symbol)) return "";
+  return symbol;
+}
+
+function cleanUnits(value: unknown): number | null {
+  if (value === undefined || value === null || value === "") return 0;
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 1_000_000_000) return null;
+  return Math.round(value * 1e8) / 1e8;
 }
 
 function uniqueById<T extends { id: string }>(items: T[]): T[] {

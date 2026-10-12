@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { sanitizeData, toBackup } from "@/lib/backup";
+import { positionValue } from "@/lib/market";
 import { defaultDateForMonth, formatMonth, lastMonths, toISODate } from "@/lib/dates";
 import { emptyData } from "@/lib/defaults";
 import { mergeSheet } from "@/lib/mergeSheet";
@@ -45,6 +46,8 @@ export function ExpenseApp() {
   const [syncing, setSyncing] = useState(false);
   const [tab, setTab] = useState<AppTab>("home");
   const [flow, setFlow] = useState<"income" | "expense" | null>(null);
+  const dataRef = useRef<AppData | null>(data);
+  dataRef.current = data;
 
   useEffect(() => {
     setData(loadData());
@@ -343,6 +346,24 @@ export function ExpenseApp() {
     showToast("Inversión eliminada");
   }
 
+  function applyMarketQuotes(quotes: { symbol: string; priceArs: number }[]) {
+    const current = dataRef.current;
+    if (!current || quotes.length === 0) return 0;
+    const prices = new Map(quotes.map((quote) => [quote.symbol.toUpperCase(), quote.priceArs]));
+    let updated = 0;
+    const investments = (current.investments ?? []).map((item) => {
+      if (!item.symbol || !item.units) return item;
+      const priceArs = prices.get(item.symbol.toUpperCase());
+      if (!priceArs) return item;
+      const currentValue = positionValue(item.units, priceArs);
+      if (currentValue === item.currentValue) return item;
+      updated += 1;
+      return { ...item, currentValue };
+    });
+    if (updated > 0) commit({ ...current, investments });
+    return updated;
+  }
+
   function askSeed() {
     if (!data) return;
     const run = () => {
@@ -403,7 +424,12 @@ export function ExpenseApp() {
       />
       ) : null}
       {tab === "investments" ? (
-        <InvestmentsView investments={data.investments ?? []} onSave={saveInvestment} onDelete={deleteInvestment} />
+        <InvestmentsView
+          investments={data.investments ?? []}
+          onSave={saveInvestment}
+          onDelete={deleteInvestment}
+          onApplyQuotes={applyMarketQuotes}
+        />
       ) : null}
       {tab === "settings" ? (
         <SettingsView

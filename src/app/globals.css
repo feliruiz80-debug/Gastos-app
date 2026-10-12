@@ -47,7 +47,17 @@
   --color-expense-solid: var(--expense-solid);
 }
 
+html {
+  max-width: 100%;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
+  touch-action: pan-y pinch-zoom;
+}
+
 body {
+  max-width: 100%;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
   background-color: var(--paper);
   background-image:
     radial-gradient(900px 520px at 0% -10%, color-mix(in srgb, var(--income) 24%, transparent), transparent 62%),

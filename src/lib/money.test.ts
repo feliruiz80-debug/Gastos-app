@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { formatMoney, parseAmount, parseBudget, parseSignedAmount } from "./money";
+import { formatMoney, parseAmount, parseBudget, parseSignedAmount, parseUnits } from "./money";
 
 describe("parseAmount", () => {
   it("lee enteros y miles con punto", () => {
@@ -24,6 +24,16 @@ describe("parseAmount", () => {
     assert.equal(parseAmount("-5"), null);
     assert.equal(parseAmount("abc"), null);
     assert.equal(parseAmount("12.500,505"), null);
+  });
+});
+
+describe("parseUnits", () => {
+  it("lee cantidades chicas de cripto y acciones", () => {
+    assert.equal(parseUnits("10"), 10);
+    assert.equal(parseUnits("0,25"), 0.25);
+    assert.equal(parseUnits("0.004"), 0.004);
+    assert.equal(parseUnits(""), null);
+    assert.equal(parseUnits("0"), null);
   });
 });
 
