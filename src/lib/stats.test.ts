@@ -1,0 +1,70 @@
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import { accountBalances, availableBalance, balanceOf, categoryBreakdown, inMonth, sumAmount } from "./stats";
+import type { Account, Category, Transaction } from "./types";
+
+const categories: Category[] = [
+  { id: "comida", name: "Supermercado", type: "expense", color: "#c4491d", monthlyBudget: 200 },
+  { id: "sueldo", name: "Sueldo", type: "income", color: "#1b7f4e", monthlyBudget: 0 },
+  { id: "ocio", name: "Salidas y ocio", type: "expense", color: "#a16207", monthlyBudget: 100 },
+];
+
+const accounts: Account[] = [
+  { id: "banco", name: "Banco", color: "#0369a1", openingBalance: 500 },
+  { id: "mp", name: "Mercado Pago", color: "#0284c7", openingBalance: 0 },
+  { id: "tarjeta", name: "Tarjeta de crédito", color: "#9a3412", openingBalance: 0 },
+];
+
+function tx(
+  partial: Partial<Transaction> & Pick<Transaction, "type" | "amount" | "date">,
+): Transaction {
+  return {
+    id: partial.id ?? `${partial.date}-${partial.type}-${partial.amount}`,
+    categoryId: partial.categoryId ?? "",
+    accountId: partial.accountId ?? "banco",
+    note: partial.note ?? "",
+    createdAt: partial.createdAt ?? "2026-10-01T12:00:00.000Z",
+    ...partial,
+  };
+}
+
+describe("estadísticas", () => {
+  const transactions = [
+    tx({ type: "income", amount: 1000, categoryId: "sueldo", accountId: "banco", date: "2026-10-01" }),
+    tx({ type: "expense", amount: 200, categoryId: "comida", accountId: "mp", date: "2026-10-06" }),
+    tx({ type: "expense", amount: 50, categoryId: "comida", accountId: "banco", date: "2026-09-06" }),
+    tx({
+      type: "transfer",
+      amount: 300,
+      accountId: "banco",
+      toAccountId: "mp",
+      date: "2026-10-02",
+      note: "Paso a MP",
+    }),
+    tx({ type: "expense", amount: 80, categoryId: "comida", accountId: "tarjeta", date: "2026-10-08" }),
+  ];
+
+  it("calcula saldo e ingresos del mes sin contar transferencias", () => {
+    assert.equal(balanceOf(transactions), 670);
+    assert.equal(sumAmount(inMonth(transactions, "2026-10"), "expense"), 280);
+    assert.equal(sumAmount(inMonth(transactions, "2026-10"), "income"), 1000);
+  });
+
+  it("agrupa gastos y muestra el presupuesto del mes", () => {
+    const totals = categoryBreakdown(inMonth(transactions, "2026-10"), categories, "expense", "2026-10");
+    assert.equal(totals[0]?.category.name, "Supermercado");
+    assert.equal(totals[0]?.amount, 280);
+    assert.equal(totals[0]?.budget, 200);
+    assert.equal(totals.find((item) => item.category.id === "ocio")?.amount, 0);
+    assert.equal(totals.find((item) => item.category.id === "ocio")?.budget, 100);
+  });
+
+  it("arma el saldo de cada cuenta con saldo inicial y transferencias", () => {
+    const balances = accountBalances(accounts, transactions);
+    const byName = Object.fromEntries(balances.map((item) => [item.account.name, item.balance]));
+    assert.equal(byName.Banco, 500 + 1000 - 50 - 300);
+    assert.equal(byName["Mercado Pago"], 0 - 200 + 300);
+    assert.equal(byName["Tarjeta de crédito"], -80);
+    assert.equal(availableBalance(accounts, transactions), 500 + 670);
+  });
+});

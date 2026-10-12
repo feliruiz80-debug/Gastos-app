@@ -1,39 +1,32 @@
-# Gastos-app
-# Control de Gastos
+# Gastos
 
-Aplicación web para registrar, organizar y controlar los ingresos y gastos personales.
+App personal para anotar ingresos, gastos y pases entre cuentas, ver el saldo de cada una y seguir el presupuesto del mes.
 
-## Objetivo
+## Qué hace
 
-Crear una aplicación simple, rápida y moderna que permita:
+- Ingreso, gasto o pase entre cuentas (efectivo, banco, Mercado Pago, tarjeta y ahorro).
+- Categorías de uso diario: sueldo, super, alquiler, servicios, nafta, tarjeta y el resto.
+- Presupuesto mensual por categoría de gasto.
+- Saldo de cada cuenta, con saldo inicial.
+- Historial con búsqueda y filtro por mes, tipo y cuenta.
+- Gráfico de los últimos 6 meses.
+- Los datos quedan en el navegador. Se pueden exportar e importar en JSON.
+- Se puede traer lo cargado en la [hoja pública](https://docs.google.com/spreadsheets/d/18TgchNsA-EMDeGPJdAB3WffqJ02viOL6/edit?gid=1335016283#gid=1335016283).
 
-* Registrar ingresos.
-* Registrar gastos.
-* Clasificar gastos por categorías.
-* Ver cuánto dinero ingresa y cuánto se gasta.
-* Consultar el saldo disponible.
-* Llevar un historial de movimientos.
-* Visualizar la información de forma clara y sencilla.
+## Cómo usarla
+
+```bash
+npm install
+npm test
+npm run dev
+```
+
+Abrí [http://localhost:3000](http://localhost:3000).
+
+En la hoja, `Movimientos` tiene ID, Fecha, Tipo, Categoría, Descripción, Monto, Cuenta y Notas. `Config` tiene las categorías, el presupuesto mensual y el saldo inicial de cada cuenta. **Traer de la hoja** suma esos movimientos y, si el presupuesto o el saldo inicial es distinto de cero, actualiza ese número. Lo que cargues solo en la app no se borra.
 
 ## Tecnologías
 
-* Frontend: por definir
-* Base de datos: por definir
-* Hosting: Vercel
-* Repositorio: GitHub
-* Desarrollo: Cursor
-
-## Estado
-
-🚧 Proyecto en desarrollo.
-
-## Próximos pasos
-
-1. Diseñar la interfaz.
-2. Crear el sistema de ingresos y gastos.
-3. Crear categorías.
-4. Implementar el cálculo automático del saldo.
-5. Agregar historial de movimientos.
-6. Agregar estadísticas y gráficos.
-7. Conectar base de datos.
-8. Publicar la versión inicial.
+- Next.js, React y Tailwind CSS
+- Datos en el navegador
+- Hosting previsto: Vercel
