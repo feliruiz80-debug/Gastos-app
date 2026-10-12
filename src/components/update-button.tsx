@@ -1,0 +1,57 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { hasNewVersion } from "@/lib/version";
+
+const currentVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? "local";
+
+async function remoteVersion(): Promise<string | null> {
+  const response = await fetch(`/api/version?t=${Date.now()}`, { cache: "no-store" });
+  if (!response.ok) return null;
+  const body = (await response.json()) as { version?: string };
+  return typeof body.version === "string" ? body.version : null;
+}
+
+function reloadApp() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("v", Date.now().toString());
+  window.location.replace(url.toString());
+}
+
+export function UpdateButton() {
+  const [available, setAvailable] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function look() {
+      try {
+        const remote = await remoteVersion();
+        if (!cancelled) setAvailable(hasNewVersion(currentVersion, remote));
+      } catch {
+        if (!cancelled) setAvailable(false);
+      }
+    }
+
+    void look();
+    const timer = window.setInterval(() => void look(), 60_000);
+    window.addEventListener("focus", look);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", look);
+    };
+  }, []);
+
+  return (
+    <button
+      type="button"
+      onClick={reloadApp}
+      className={`rounded-full px-3 py-1.5 text-sm font-semibold ${
+        available ? "bg-ink text-paper" : "border border-line bg-card text-ink"
+      }`}
+    >
+      {available ? "Actualizar código" : "Actualizar"}
+    </button>
+  );
+}

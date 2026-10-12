@@ -6,6 +6,7 @@ import { formatMoney, formatSigned } from "@/lib/money";
 import type { AccountBalance, CategoryTotal } from "@/lib/stats";
 import type { Account, Category, Transaction, TxType } from "@/lib/types";
 import { ThemeToggle } from "./theme-toggle";
+import { UpdateButton } from "./update-button";
 
 type DashboardProps = {
   scope: "month" | "all";
@@ -129,6 +130,7 @@ export function Dashboard(props: DashboardProps) {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <ThemeToggle />
+            <UpdateButton />
             <div className="hidden gap-2 sm:flex">
               <button type="button" onClick={() => onAdd("income")} className="rounded-full bg-income-solid px-4 py-2.5 text-sm font-semibold text-white">
                 Nuevo ingreso
