@@ -1,6 +1,6 @@
 import { defaultAccounts, defaultCategories } from "./defaults";
 import { isValidISODate } from "./dates";
-import type { Account, AppData, BackupFile, Category, Transaction, TxType } from "./types";
+import type { Account, AppData, BackupFile, Category, Investment, InvestmentKind, Transaction, TxType } from "./types";
 
 const MAX_NAME = 60;
 const MAX_NOTE = 140;
@@ -85,6 +85,28 @@ function cleanTransaction(value: unknown): Transaction | null {
   };
 }
 
+const KINDS: InvestmentKind[] = ["plazo", "acciones", "fondo", "cripto", "otro"];
+
+function isKind(value: unknown): value is InvestmentKind {
+  return typeof value === "string" && KINDS.includes(value as InvestmentKind);
+}
+
+function cleanInvestment(value: unknown): Investment | null {
+  if (!value || typeof value !== "object") return null;
+  const investment = value as Partial<Investment>;
+  if (typeof investment.id !== "string" || investment.id.trim().length === 0) return null;
+  if (typeof investment.name !== "string") return null;
+  const name = investment.name.trim();
+  if (!name || name.length > MAX_NAME) return null;
+  if (!isKind(investment.kind)) return null;
+  const invested = cleanMoney(investment.invested, false);
+  const currentValue = cleanMoney(investment.currentValue, false);
+  if (invested === null || currentValue === null || invested <= 0) return null;
+  const note = typeof investment.note === "string" ? investment.note.trim() : "";
+  if (note.length > MAX_NOTE) return null;
+  return { id: investment.id, name, kind: investment.kind, invested, currentValue, note };
+}
+
 function uniqueById<T extends { id: string }>(items: T[]): T[] {
   const seen = new Set<string>();
   const result: T[] = [];
@@ -98,7 +120,12 @@ function uniqueById<T extends { id: string }>(items: T[]): T[] {
 
 export function sanitizeData(input: unknown): AppData | null {
   if (!input || typeof input !== "object") return null;
-  const record = input as { categories?: unknown; accounts?: unknown; transactions?: unknown };
+  const record = input as {
+    categories?: unknown;
+    accounts?: unknown;
+    transactions?: unknown;
+    investments?: unknown;
+  };
   if (!Array.isArray(record.categories) || !Array.isArray(record.transactions)) return null;
 
   const categories = uniqueById(
@@ -131,10 +158,17 @@ export function sanitizeData(input: unknown): AppData | null {
     }))
     .filter((transaction) => transaction.type !== "transfer" || (transaction.toAccountId && transaction.toAccountId !== transaction.accountId));
 
+  const investments = uniqueById(
+    (Array.isArray(record.investments) ? record.investments : [])
+      .map(cleanInvestment)
+      .filter((investment): investment is Investment => investment !== null),
+  );
+
   return {
     categories: safeCategories,
     accounts: safeAccounts,
     transactions,
+    investments,
   };
 }
 
@@ -145,5 +179,6 @@ export function toBackup(data: AppData, now = new Date()): BackupFile {
     categories: data.categories,
     accounts: data.accounts,
     transactions: data.transactions,
+    investments: data.investments,
   };
 }

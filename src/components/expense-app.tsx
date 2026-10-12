@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { sanitizeData, toBackup } from "@/lib/backup";
-import { defaultDateForMonth, lastMonths, toISODate } from "@/lib/dates";
+import { defaultDateForMonth, formatMonth, lastMonths, toISODate } from "@/lib/dates";
 import { emptyData } from "@/lib/defaults";
 import { mergeSheet } from "@/lib/mergeSheet";
 import { amountToInput } from "@/lib/money";
@@ -10,12 +10,17 @@ import { applySeed } from "@/lib/seed";
 import type { SheetPayload } from "@/lib/sheets";
 import { accountBalances, availableBalance, categoryBreakdown, inMonth, monthSeries, sumAmount } from "@/lib/stats";
 import { loadData, saveData } from "@/lib/storage";
-import type { Account, AppData, Category, Transaction, TxType } from "@/lib/types";
+import type { Account, AppData, Category, Investment, Transaction, TxType } from "@/lib/types";
 import { AccountsDialog } from "./accounts-dialog";
+import { BottomNav, type AppTab } from "./bottom-nav";
 import { CategoryDialog } from "./category-dialog";
 import { Dashboard } from "./dashboard";
+import { FlowPanel } from "./flow-panel";
+import { InvestmentsView } from "./investments-view";
 import { Modal } from "./modal";
+import { SettingsView } from "./settings-view";
 import { TransactionDialog, type Draft } from "./transaction-dialog";
+import { UpdateCartel } from "./update-button";
 
 type ConfirmState = {
   title: string;
@@ -38,6 +43,8 @@ export function ExpenseApp() {
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [tab, setTab] = useState<AppTab>("home");
+  const [flow, setFlow] = useState<"income" | "expense" | null>(null);
 
   useEffect(() => {
     setData(loadData());
@@ -312,6 +319,30 @@ export function ExpenseApp() {
     }
   }
 
+  function saveInvestment(investment: Investment): string | null {
+    if (!data) return "No se pudo guardar.";
+    const investments = data.investments ?? [];
+    const duplicate = investments.some(
+      (item) => item.id !== investment.id && item.name.toLowerCase() === investment.name.toLowerCase(),
+    );
+    if (duplicate) return "Ya existe una inversión con ese nombre.";
+    const exists = investments.some((item) => item.id === investment.id);
+    commit({
+      ...data,
+      investments: exists
+        ? investments.map((item) => (item.id === investment.id ? investment : item))
+        : [...investments, investment],
+    });
+    showToast(exists ? "Inversión actualizada" : "Inversión guardada");
+    return null;
+  }
+
+  function deleteInvestment(id: string) {
+    if (!data) return;
+    commit({ ...data, investments: (data.investments ?? []).filter((item) => item.id !== id) });
+    showToast("Inversión eliminada");
+  }
+
   function askSeed() {
     if (!data) return;
     const run = () => {
@@ -334,9 +365,12 @@ export function ExpenseApp() {
   }
 
   const dialogsClosed = !categoriesOpen && !accountsOpen && !confirm;
+  const periodLabel = scope === "month" ? formatMonth(month) : "Todo el historial";
 
   return (
     <>
+      <UpdateCartel />
+      {tab === "home" ? (
       <Dashboard
         scope={scope}
         month={month}
@@ -364,40 +398,67 @@ export function ExpenseApp() {
         onAdd={openNew}
         onEdit={openEdit}
         onDelete={askDelete}
-        onSeed={askSeed}
-        onOpenCategories={() => setCategoriesOpen(true)}
-        onOpenAccounts={() => setAccountsOpen(true)}
+        onOpenFlow={setFlow}
         onSync={() => void syncSheet()}
-        onExport={exportBackup}
-        onImport={(file) => void importBackup(file)}
-        onClear={() =>
-          setConfirm({
-            title: "Borrar movimientos",
-            body: "Se borran todos los movimientos. Las categorías, las cuentas y los saldos iniciales quedan.",
-            confirmLabel: "Borrar",
-            action: () => {
-              commit({ ...data, transactions: [] });
-              setConfirm(null);
-              setDraft(null);
-              showToast("Movimientos borrados");
-            },
-          })
-        }
-        onReset={() =>
-          setConfirm({
-            title: "Restablecer app",
-            body: "Vuelve a las categorías y cuentas iniciales, y borra todos los movimientos.",
-            confirmLabel: "Restablecer",
-            action: () => {
-              commit(emptyData());
-              setConfirm(null);
-              setDraft(null);
-              setAccountFilter("all");
-              showToast("App restablecida");
-            },
-          })
-        }
       />
+      ) : null}
+      {tab === "investments" ? (
+        <InvestmentsView investments={data.investments ?? []} onSave={saveInvestment} onDelete={deleteInvestment} />
+      ) : null}
+      {tab === "settings" ? (
+        <SettingsView
+          syncing={syncing}
+          onOpenCategories={() => setCategoriesOpen(true)}
+          onOpenAccounts={() => setAccountsOpen(true)}
+          onSync={() => void syncSheet()}
+          onExport={exportBackup}
+          onImport={(file) => void importBackup(file)}
+          onSeed={askSeed}
+          onClear={() =>
+            setConfirm({
+              title: "Borrar movimientos",
+              body: "Se borran todos los movimientos. Las categorías, las cuentas y los saldos iniciales quedan.",
+              confirmLabel: "Borrar",
+              action: () => {
+                commit({ ...data, transactions: [] });
+                setConfirm(null);
+                setDraft(null);
+                showToast("Movimientos borrados");
+              },
+            })
+          }
+          onReset={() =>
+            setConfirm({
+              title: "Restablecer app",
+              body: "Vuelve a las categorías y cuentas iniciales, y borra todos los movimientos.",
+              confirmLabel: "Restablecer",
+              action: () => {
+                commit(emptyData());
+                setConfirm(null);
+                setDraft(null);
+                setAccountFilter("all");
+                showToast("App restablecida");
+              },
+            })
+          }
+        />
+      ) : null}
+      <BottomNav tab={tab} onChange={setTab} />
+      {flow ? (
+        <FlowPanel
+          type={flow}
+          periodLabel={periodLabel}
+          totals={categoryBreakdown(period, data.categories, flow, scope === "month" ? month : "all")}
+          transactions={period.filter((transaction) => transaction.type === flow)}
+          categories={data.categories}
+          accounts={data.accounts}
+          onClose={() => setFlow(null)}
+          onEdit={(transaction) => {
+            setFlow(null);
+            openEdit(transaction);
+          }}
+        />
+      ) : null}
 
       {draft && dialogsClosed ? (
         <TransactionDialog

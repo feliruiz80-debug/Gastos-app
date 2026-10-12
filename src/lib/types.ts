@@ -27,10 +27,22 @@ export type Transaction = {
   createdAt: string;
 };
 
+export type InvestmentKind = "plazo" | "acciones" | "fondo" | "cripto" | "otro";
+
+export type Investment = {
+  id: string;
+  name: string;
+  kind: InvestmentKind;
+  invested: number;
+  currentValue: number;
+  note: string;
+};
+
 export type AppData = {
   categories: Category[];
   accounts: Account[];
   transactions: Transaction[];
+  investments: Investment[];
 };
 
 export type BackupFile = AppData & {

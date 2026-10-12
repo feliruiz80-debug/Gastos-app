@@ -65,5 +65,6 @@ export function emptyData() {
     categories: defaultCategories.map((category) => ({ ...category })),
     accounts: defaultAccounts.map((account) => ({ ...account })),
     transactions: [],
+    investments: [],
   };
 }

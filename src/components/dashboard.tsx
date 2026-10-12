@@ -1,12 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
 import { currentMonth, formatGroupDate, formatMonth, formatMonthShort, shiftMonth } from "@/lib/dates";
 import { formatMoney, formatSigned } from "@/lib/money";
 import type { AccountBalance, CategoryTotal } from "@/lib/stats";
 import type { Account, Category, Transaction, TxType } from "@/lib/types";
-import { ThemeToggle } from "./theme-toggle";
-import { UpdateButton } from "./update-button";
 
 type DashboardProps = {
   scope: "month" | "all";
@@ -35,14 +32,8 @@ type DashboardProps = {
   onAdd: (type: TxType) => void;
   onEdit: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
-  onSeed: () => void;
-  onOpenCategories: () => void;
-  onOpenAccounts: () => void;
+  onOpenFlow: (type: "income" | "expense") => void;
   onSync: () => void;
-  onExport: () => void;
-  onImport: (file: File) => void;
-  onClear: () => void;
-  onReset: () => void;
 };
 
 function insight(income: number, expense: number, scope: "month" | "all"): string | null {
@@ -84,17 +75,9 @@ export function Dashboard(props: DashboardProps) {
     onAdd,
     onEdit,
     onDelete,
-    onSeed,
-    onOpenCategories,
-    onOpenAccounts,
+    onOpenFlow,
     onSync,
-    onExport,
-    onImport,
-    onClear,
-    onReset,
   } = props;
-  const [menuOpen, setMenuOpen] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
   const todayMonth = currentMonth();
   const periodLabel = scope === "month" ? "Este mes" : "En total";
   const note = insight(income, expense, scope);
@@ -128,20 +111,16 @@ export function Dashboard(props: DashboardProps) {
             <p className="text-sm font-medium tracking-wide text-muted">Pesos, cuentas y presupuestos</p>
             <h1 className="font-display text-4xl tracking-tight sm:text-5xl">Gastos</h1>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <ThemeToggle />
-            <UpdateButton />
-            <div className="hidden gap-2 sm:flex">
-              <button type="button" onClick={() => onAdd("income")} className="rounded-full bg-income-solid px-4 py-2.5 text-sm font-semibold text-white">
-                Nuevo ingreso
-              </button>
-              <button type="button" onClick={() => onAdd("expense")} className="rounded-full bg-expense-solid px-4 py-2.5 text-sm font-semibold text-white">
-                Nuevo gasto
-              </button>
-              <button type="button" onClick={() => onAdd("transfer")} className="rounded-full border border-line bg-card px-4 py-2.5 text-sm font-semibold shadow-[var(--shadow)]">
-                Pasar
-              </button>
-            </div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => onAdd("income")} className="rounded-full bg-income-solid px-4 py-2.5 text-sm font-semibold text-white">
+              Nuevo ingreso
+            </button>
+            <button type="button" onClick={() => onAdd("expense")} className="rounded-full bg-expense-solid px-4 py-2.5 text-sm font-semibold text-white">
+              Nuevo gasto
+            </button>
+            <button type="button" onClick={() => onAdd("transfer")} className="glass rounded-full px-4 py-2.5 text-sm font-semibold">
+              Pasar
+            </button>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -166,94 +145,10 @@ export function Dashboard(props: DashboardProps) {
           <button
             type="button"
             onClick={() => onScope(scope === "month" ? "all" : "month")}
-            className="rounded-full border border-line bg-card px-4 py-2 text-sm font-medium"
+            className="glass rounded-full px-4 py-2 text-sm font-medium"
           >
             {scope === "month" ? "Ver todo" : "Ver el mes"}
           </button>
-          <button type="button" onClick={onOpenCategories} className="rounded-full border border-line bg-card px-4 py-2 text-sm font-medium">
-            Categorías
-          </button>
-          <button type="button" onClick={onOpenAccounts} className="rounded-full border border-line bg-card px-4 py-2 text-sm font-medium">
-            Cuentas
-          </button>
-          <div className="relative">
-            <button
-              type="button"
-              aria-expanded={menuOpen}
-              aria-haspopup="menu"
-              onClick={() => setMenuOpen((open) => !open)}
-              className="rounded-full border border-line bg-card px-4 py-2 text-sm font-medium"
-            >
-              Datos
-            </button>
-            {menuOpen ? (
-              <>
-                <div className="fixed inset-0 z-10" onMouseDown={() => setMenuOpen(false)} />
-                <div role="menu" className="absolute right-0 z-20 mt-2 w-56 rounded-2xl border border-line bg-card p-1 shadow-xl">
-                  <MenuButton
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onSync();
-                    }}
-                  >
-                    {syncing ? "Leyendo la hoja…" : "Traer de la hoja"}
-                  </MenuButton>
-                  <MenuButton
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onExport();
-                    }}
-                  >
-                    Exportar respaldo
-                  </MenuButton>
-                  <MenuButton
-                    onClick={() => {
-                      setMenuOpen(false);
-                      fileRef.current?.click();
-                    }}
-                  >
-                    Importar respaldo
-                  </MenuButton>
-                  <MenuButton
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onSeed();
-                    }}
-                  >
-                    Cargar ejemplos
-                  </MenuButton>
-                  <MenuButton
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onClear();
-                    }}
-                  >
-                    Borrar movimientos
-                  </MenuButton>
-                  <MenuButton
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onReset();
-                    }}
-                  >
-                    Restablecer app
-                  </MenuButton>
-                </div>
-              </>
-            ) : null}
-          </div>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="application/json,.json"
-            className="sr-only"
-            aria-label="Importar respaldo"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              event.target.value = "";
-              if (file) onImport(file);
-            }}
-          />
         </div>
       </header>
 
@@ -283,8 +178,8 @@ export function Dashboard(props: DashboardProps) {
               <p className="mt-3 font-display text-4xl tracking-tight tabular-nums">{formatMoney(balance)}</p>
               <p className="mt-3 text-sm text-paper/70">Saldo inicial más movimientos</p>
             </article>
-            <MoneyCard label="Ingresos" hint={periodLabel} value={income} tone="income" />
-            <MoneyCard label="Gastos" hint={periodLabel} value={expense} tone="expense" />
+            <MoneyCard label="Ingresos" hint={`${periodLabel} · tocá para ver el gráfico`} value={income} tone="income" onOpen={() => onOpenFlow("income")} />
+            <MoneyCard label="Gastos" hint={`${periodLabel} · tocá para ver el gráfico`} value={expense} tone="expense" onOpen={() => onOpenFlow("expense")} />
             <MoneyCard
               label="Balance"
               hint={periodLabel}
@@ -298,9 +193,7 @@ export function Dashboard(props: DashboardProps) {
           <section className="mt-6">
             <div className="mb-3 flex items-end justify-between gap-3">
               <h2 className="font-display text-2xl tracking-tight">Cuentas</h2>
-              <button type="button" onClick={onOpenAccounts} className="text-sm text-muted">
-                Editar saldos
-              </button>
+              <p className="text-sm text-muted">Tocá una para filtrar</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {accountBalances.map((item) => (
@@ -551,20 +444,6 @@ export function Dashboard(props: DashboardProps) {
       <p className="mt-10 text-center text-xs text-muted">
         Los datos quedan en este navegador. La hoja pública se trae cuando vos lo pedís.
       </p>
-
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-card/95 p-3 backdrop-blur sm:hidden">
-        <div className="mx-auto flex max-w-lg gap-2">
-          <button type="button" onClick={() => onAdd("income")} className="flex-1 rounded-full bg-income-solid py-3 text-sm font-semibold text-white">
-            Ingreso
-          </button>
-          <button type="button" onClick={() => onAdd("expense")} className="flex-1 rounded-full bg-expense-solid py-3 text-sm font-semibold text-white">
-            Gasto
-          </button>
-          <button type="button" onClick={() => onAdd("transfer")} className="rounded-full border border-line px-4 py-3 text-sm font-semibold">
-            Pasar
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
@@ -575,22 +454,30 @@ function MoneyCard({
   value,
   tone,
   signed = false,
+  onOpen,
 }: {
   label: string;
   hint: string;
   value: number;
-  tone: "income" | "expense";
+  tone: "income" | "expense" | "balance";
   signed?: boolean;
+  onOpen?: () => void;
 }) {
   const shown = signed ? `${value < 0 ? "−" : "+"}${formatMoney(Math.abs(value))}` : formatMoney(value);
-  return (
-    <article className="rounded-3xl border border-line bg-card p-5">
+  const toneClass = tone === "expense" || (tone === "balance" && value < 0) ? "text-expense" : tone === "income" || tone === "balance" ? "text-income" : "";
+  const className = `glass w-full rounded-3xl p-5 text-left ${onOpen ? "transition hover:bg-card" : ""}`;
+  const body = (
+    <>
       <p className="text-sm text-muted">{label}</p>
-      <p className={`mt-3 font-display text-3xl tracking-tight tabular-nums ${tone === "income" ? "text-income" : "text-expense"}`}>
-        {shown}
-      </p>
+      <p className={`mt-3 font-display text-3xl tracking-tight tabular-nums ${toneClass}`}>{shown}</p>
       <p className="mt-3 text-sm text-muted">{hint}</p>
-    </article>
+    </>
+  );
+  if (!onOpen) return <article className={className}>{body}</article>;
+  return (
+    <button type="button" onClick={onOpen} className={className}>
+      {body}
+    </button>
   );
 }
 
@@ -605,10 +492,3 @@ function Bar({ value, max, className, label }: { value: number; max: number; cla
   );
 }
 
-function MenuButton({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
-  return (
-    <button type="button" role="menuitem" onClick={onClick} className="block w-full rounded-xl px-3 py-2 text-left text-sm hover:bg-paper">
-      {children}
-    </button>
-  );
-}
