@@ -1,23 +1,61 @@
 @import "tailwindcss";
 
-@theme {
+:root {
+  color-scheme: light;
+  --paper: #f6f1e8;
+  --paper-deep: #e8e0d2;
+  --card: #fffdf8;
+  --ink: #1a1613;
+  --muted: #6d655d;
+  --line: #e3d8c8;
+  --income: #157a45;
+  --expense: #9a3412;
+  --income-solid: #157a45;
+  --expense-solid: #9a3412;
+  --grain: rgba(26, 22, 19, 0.045);
+  --shadow: 0 1px 2px rgba(26, 22, 19, 0.04), 0 16px 40px rgba(26, 22, 19, 0.05);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #100e0c;
+  --paper-deep: #221e1a;
+  --card: #1b1815;
+  --ink: #f6f1e8;
+  --muted: #b6aa9c;
+  --line: #3c342c;
+  --income: #4ade80;
+  --expense: #fb923c;
+  --income-solid: #166534;
+  --expense-solid: #9a3412;
+  --grain: rgba(246, 241, 232, 0.035);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 18px 44px rgba(0, 0, 0, 0.28);
+}
+
+@theme inline {
   --font-sans: ui-sans-serif, system-ui, sans-serif;
-  --font-display: Georgia, "Times New Roman", serif;
-  --color-paper: #f3eee6;
-  --color-paper-deep: #e6dfd2;
-  --color-card: #fffdf9;
-  --color-ink: #1c1714;
-  --color-muted: #6f675f;
-  --color-line: #e4d9c8;
-  --color-income: #1b7f4e;
-  --color-expense: #9a3412;
+  --font-display: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-income: var(--income);
+  --color-expense: var(--expense);
+  --color-income-solid: var(--income-solid);
+  --color-expense-solid: var(--expense-solid);
 }
 
 body {
-  background-color: var(--color-paper);
-  background-image: radial-gradient(rgba(28, 23, 20, 0.045) 0.7px, transparent 0.7px);
+  background-color: var(--paper);
+  background-image: radial-gradient(var(--grain) 0.7px, transparent 0.7px);
   background-size: 18px 18px;
-  color: var(--color-ink);
+  color: var(--ink);
+}
+
+article {
+  box-shadow: var(--shadow);
 }
 
 button,
@@ -27,7 +65,18 @@ textarea {
   font: inherit;
 }
 
+select,
+input,
+textarea {
+  color: var(--ink);
+  background-color: var(--paper);
+}
+
 :focus-visible {
-  outline: 2px solid var(--color-ink);
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--income) 28%, transparent);
 }

@@ -108,7 +108,7 @@ export function AccountsDialog({
               aria-label={`Color ${swatch}`}
               aria-pressed={color === swatch}
               onClick={() => setColor(swatch)}
-              className={`h-7 w-7 rounded-full ${color === swatch ? "ring-2 ring-ink ring-offset-2" : ""}`}
+              className={`h-7 w-7 rounded-full ${color === swatch ? "ring-2 ring-ink ring-offset-2 ring-offset-paper" : ""}`}
               style={{ backgroundColor: swatch }}
             />
           ))}

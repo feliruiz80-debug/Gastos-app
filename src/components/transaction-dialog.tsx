@@ -218,7 +218,7 @@ export function TransactionDialog({
                         aria-pressed={selected}
                         onClick={() => setCategoryId(category.id)}
                         className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${
-                          selected ? "border-ink bg-white ring-2 ring-ink" : "border-line bg-paper"
+                          selected ? "border-ink bg-card ring-2 ring-ink" : "border-line bg-paper"
                         }`}
                       >
                         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: category.color }} />
