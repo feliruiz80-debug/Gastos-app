@@ -27,7 +27,7 @@ export type Transaction = {
   createdAt: string;
 };
 
-export type InvestmentKind = "plazo" | "acciones" | "fondo" | "cripto" | "otro";
+export type InvestmentKind = "plazo" | "acciones" | "cedear" | "fondo" | "cripto" | "otro";
 
 export type Investment = {
   id: string;
