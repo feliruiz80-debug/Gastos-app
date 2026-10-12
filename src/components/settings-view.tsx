@@ -19,7 +19,7 @@ export function SettingsView(props: SettingsViewProps) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="mx-auto min-h-screen max-w-3xl px-4 py-6 pb-28 sm:px-6 sm:py-10">
+    <div className="mx-auto min-h-screen max-w-3xl px-4 py-6 pb-32 sm:px-6 sm:pt-10 sm:pb-32">
       <header>
         <p className="text-sm font-medium tracking-wide text-muted">Todo lo que se configura</p>
         <h1 className="font-display text-4xl tracking-tight sm:text-5xl">Configuración</h1>

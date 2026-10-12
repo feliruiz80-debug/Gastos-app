@@ -104,7 +104,7 @@ export function Dashboard(props: DashboardProps) {
     .join(". ");
 
   return (
-    <div className="mx-auto min-h-screen max-w-6xl px-4 py-6 pb-28 sm:px-6 sm:py-10 sm:pb-10">
+    <div className="mx-auto min-h-screen max-w-6xl px-4 py-6 pb-32 sm:px-6 sm:pt-10 sm:pb-32">
       <header className="space-y-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
