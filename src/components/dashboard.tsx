@@ -107,8 +107,18 @@ export function Dashboard(props: DashboardProps) {
   return (
     <div className="mx-auto min-h-screen max-w-6xl px-4 py-6 pb-32 sm:px-6 sm:pt-10 sm:pb-32">
       <header className="space-y-5">
-        <div className="flex flex-col items-center gap-5">
-          <h1 className="text-center font-display text-4xl tracking-tight sm:text-5xl">Money Manager</h1>
+        <div className="flex flex-col items-center gap-6">
+          <div className="brand-lockup">
+            <div className="brand-mark" aria-hidden="true">
+              <span className="brand-mark-ring" />
+              <span className="brand-mark-letter">M</span>
+              <span className="brand-mark-arrow" />
+            </div>
+            <h1 className="brand-title">
+              <span className="brand-kicker">Money</span>
+              <span className="brand-name">Manager</span>
+            </h1>
+          </div>
           <div className="flex items-stretch justify-center gap-3">
             <button
               type="button"
