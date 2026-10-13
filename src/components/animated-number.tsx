@@ -47,7 +47,6 @@ function OdometerDigit({
     prevRef.current = target;
     offsetRef.current = next;
     setDurationMs(800 + place * 200);
-    // Forzar layout antes de animar en el primer pintado.
     if (!mounted.current) {
       setOffset(0);
       requestAnimationFrame(() => setOffset(next));
@@ -62,7 +61,7 @@ function OdometerDigit({
       <span
         className="odometer-reel"
         style={{
-          transform: `translateY(-${offset}em)`,
+          transform: `translate3d(0, calc(-${offset} * var(--odometer-h)), 0)`,
           transitionDuration: `${durationMs}ms`,
         }}
       >
@@ -97,7 +96,7 @@ export function AnimatedMoney({ value, className = "", signed = false }: Animate
   }
 
   return (
-    <span className={`odometer inline-flex items-baseline tabular-nums ${className}`} aria-label={text}>
+    <span className={`odometer tabular-nums ${className}`} aria-label={text}>
       {Array.from(text).map((char, index) => {
         if (/\d/.test(char)) {
           const digitPlace = digitPlaces[index] ?? 0;

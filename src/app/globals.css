@@ -129,15 +129,25 @@ textarea {
 }
 
 .odometer {
-  line-height: 1;
+  --odometer-h: 1em;
+  display: inline-flex;
+  align-items: center;
+  height: var(--odometer-h);
+  line-height: var(--odometer-h);
+  overflow: hidden;
 }
 
 .odometer-digit {
+  position: relative;
   display: inline-block;
-  height: 1em;
-  overflow: hidden;
-  vertical-align: baseline;
-  width: 0.62em;
+  flex: 0 0 auto;
+  width: 0.65em;
+  height: var(--odometer-h);
+  /* Recorte duro: evita bordes del dígito de arriba/abajo. */
+  overflow: clip;
+  clip-path: inset(0.08em 0);
+  contain: paint;
+  vertical-align: middle;
 }
 
 .odometer-reel {
@@ -145,18 +155,24 @@ textarea {
   transition-property: transform;
   transition-timing-function: cubic-bezier(0.16, 0.84, 0.28, 1);
   will-change: transform;
+  backface-visibility: hidden;
 }
 
 .odometer-glyph {
-  display: block;
-  height: 1em;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--odometer-h);
+  line-height: var(--odometer-h);
+  overflow: hidden;
   text-align: center;
 }
 
 .odometer-static {
-  display: inline-block;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  height: var(--odometer-h);
+  line-height: var(--odometer-h);
   white-space: pre;
 }
 
