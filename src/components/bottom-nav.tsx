@@ -87,8 +87,13 @@ function TabIcon({ name }: { name: "home" | "invest" | "settings" }) {
   }
   return (
     <svg {...common}>
-      <circle cx="16" cy="16" r="3.4" stroke="currentColor" strokeWidth="2.2" />
-      <path d="M16 4.2v2.8M16 25v2.8M4.2 16h2.8M25 16h2.8M7.6 7.6l2 2M22.4 22.4l2 2M24.4 7.6l-2 2M9.6 22.4l-2 2" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      <path
+        d="M13.1 4.6h5.8l.7 2.4a8.6 8.6 0 0 1 2.1 1.2l2.5-.7 2.9 2.9-.7 2.5c.5.66.9 1.36 1.2 2.1l2.4.7v5.8l-2.4.7a8.6 8.6 0 0 1-1.2 2.1l.7 2.5-2.9 2.9-2.5-.7a8.6 8.6 0 0 1-2.1 1.2l-.7 2.4h-5.8l-.7-2.4a8.6 8.6 0 0 1-2.1-1.2l-2.5.7-2.9-2.9.7-2.5a8.6 8.6 0 0 1-1.2-2.1L4.6 18.9v-5.8l2.4-.7c.3-.74.7-1.44 1.2-2.1l-.7-2.5 2.9-2.9 2.5.7c.66-.5 1.36-.9 2.1-1.2l.7-2.4Z"
+        stroke="currentColor"
+        strokeWidth="2.1"
+        strokeLinejoin="round"
+      />
+      <circle cx="16" cy="16" r="3.6" stroke="currentColor" strokeWidth="2.1" />
     </svg>
   );
 }
