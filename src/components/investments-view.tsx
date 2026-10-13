@@ -267,7 +267,7 @@ export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }
       <section className="glass mt-4 rounded-3xl p-5">
         <h2 className="font-display text-2xl tracking-tight">Cómo está repartido</h2>
         <div className="mt-4">
-          <DonutChart center={formatMoney(currentTotal)} slices={byKind} />
+          <DonutChart slices={byKind} />
         </div>
       </section>
 

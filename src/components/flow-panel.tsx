@@ -59,7 +59,6 @@ export function FlowPanel({
 
         <div className="rounded-3xl border border-line/70 bg-card/50 p-4">
           <DonutChart
-            center={formatMoney(total)}
             slices={shown.map((item) => ({
               id: item.category.id,
               name: item.category.name,

@@ -73,13 +73,13 @@ function prepareSlices(slices: Slice[]): { total: number; prepared: PreparedSlic
   const total = slices.reduce((sum, slice) => sum + slice.amount, 0);
   if (total <= 0) return { total: 0, prepared: [] };
 
-  const gap = slices.length > 1 ? 3.4 : 0;
+  const gap = slices.length > 1 ? 2.6 : 0;
   const usable = 360 - gap * slices.length;
-  let cursor = -24;
+  let cursor = -20;
   const prepared: PreparedSlice[] = [];
 
   for (const slice of slices) {
-    const sweep = Math.max((slice.amount / total) * usable, 1.2);
+    const sweep = Math.max((slice.amount / total) * usable, 1.1);
     const start = cursor;
     const end = cursor + sweep;
     prepared.push({
@@ -95,18 +95,18 @@ function prepareSlices(slices: Slice[]): { total: number; prepared: PreparedSlic
   return { total, prepared };
 }
 
-const DEPTH_LAYERS = 28;
-const EXTRUDE = 34;
+const DEPTH_LAYERS = 24;
+const EXTRUDE = 30;
 
-export function DonutChart({ slices, center }: { slices: Slice[]; center: string }) {
+export function DonutChart({ slices }: { slices: Slice[]; center?: string }) {
   const uid = useId().replace(/:/g, "");
   const sceneRef = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [ready, setReady] = useState(false);
   const { total, prepared } = useMemo(() => prepareSlices(slices), [slices]);
-  const rInner = 30;
+  const rInner = 36;
   const rOuter = 70;
-  const label = slices.map((slice) => `${slice.name} ${slice.amount}`).join(", ");
+  const aria = prepared.map((s) => `${s.name} ${s.percent}%`).join(", ") || "Sin datos";
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setReady(true));
@@ -121,7 +121,7 @@ export function DonutChart({ slices, center }: { slices: Slice[]; center: string
       const rect = node.getBoundingClientRect();
       const px = (event.clientX - rect.left) / rect.width - 0.5;
       const py = (event.clientY - rect.top) / rect.height - 0.5;
-      setTilt({ x: py * -6, y: px * 8 });
+      setTilt({ x: py * -5, y: px * 7 });
     };
     const onLeave = () => setTilt({ x: 0, y: 0 });
 
@@ -134,10 +134,10 @@ export function DonutChart({ slices, center }: { slices: Slice[]; center: string
   }, []);
 
   return (
-    <div className="donut-pro flex flex-col items-center gap-6">
+    <div className="donut-pro flex flex-col items-center gap-5">
       <div
         ref={sceneRef}
-        className={`donut-3d-scene relative mx-auto h-72 w-72 touch-manipulation sm:h-80 sm:w-80 ${ready ? "donut-3d-ready" : ""}`}
+        className={`donut-3d-scene relative mx-auto h-64 w-64 touch-manipulation sm:h-72 sm:w-72 ${ready ? "donut-3d-ready" : ""}`}
       >
         <div className="donut-3d-shadow" aria-hidden="true" />
         <div className="donut-3d-glow" aria-hidden="true" />
@@ -145,15 +145,15 @@ export function DonutChart({ slices, center }: { slices: Slice[]; center: string
         <div
           className="donut-3d-tilt donut-3d-spin"
           role="img"
-          aria-label={label || "Sin datos"}
+          aria-label={aria}
           style={{
-            transform: `rotateX(${40 + tilt.x}deg) rotateZ(${-6 + tilt.y}deg)`,
+            transform: `rotateX(${38 + tilt.x}deg) rotateZ(${-5 + tilt.y}deg)`,
           }}
         >
-          {/* Cara inferior (más oscura) para que se note el cuerpo sólido */}
+          {/* Cara inferior */}
           <div
             className="donut-3d-layer"
-            style={{ transform: `translate3d(0, ${EXTRUDE * 0.55}px, ${-EXTRUDE * 0.35}px)`, zIndex: 0 }}
+            style={{ transform: `translate3d(0, ${EXTRUDE * 0.5}px, ${-EXTRUDE * 0.32}px)`, zIndex: 0 }}
           >
             <svg viewBox="0 0 160 160" className="h-full w-full" aria-hidden="true">
               {total <= 0 ? (
@@ -170,14 +170,14 @@ export function DonutChart({ slices, center }: { slices: Slice[]; center: string
                   <path
                     key={`bottom-${slice.id}`}
                     d={donutSegmentPath(80, 80, rInner, rOuter, slice.start, slice.end)}
-                    fill={shade(slice.color, 24, "#000")}
+                    fill={shade(slice.color, 22, "#000")}
                   />
                 ))
               )}
             </svg>
           </div>
 
-          {/* Paredes laterales gruesas */}
+          {/* Paredes */}
           <div className="donut-3d-layer donut-3d-walls" style={{ zIndex: 1 }}>
             <svg viewBox="0 0 160 160" className="h-full w-full overflow-visible" aria-hidden="true">
               <defs>
@@ -185,9 +185,8 @@ export function DonutChart({ slices, center }: { slices: Slice[]; center: string
                   const lit = 0.5 + 0.5 * Math.cos(((slice.mid - 195) * Math.PI) / 180);
                   return (
                     <linearGradient key={`w-${slice.id}`} id={`wall-${uid}-${slice.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor={shade(slice.color, 48 + lit * 22, "#000")} />
-                      <stop offset="55%" stopColor={shade(slice.color, 34 + lit * 12, "#000")} />
-                      <stop offset="100%" stopColor={shade(slice.color, 18, "#000")} />
+                      <stop offset="0%" stopColor={shade(slice.color, 50 + lit * 20, "#000")} />
+                      <stop offset="100%" stopColor={shade(slice.color, 20, "#000")} />
                     </linearGradient>
                   );
                 })}
@@ -195,7 +194,7 @@ export function DonutChart({ slices, center }: { slices: Slice[]; center: string
               {prepared.map((slice) => (
                 <g key={`side-${slice.id}`}>
                   <path d={sideWallPath(80, 80, rOuter, slice.start, slice.end, EXTRUDE)} fill={`url(#wall-${uid}-${slice.id})`} />
-                  <path d={sideWallPath(80, 80, rInner, slice.start, slice.end, EXTRUDE)} fill={shade(slice.color, 16, "#000")} />
+                  <path d={sideWallPath(80, 80, rInner, slice.start, slice.end, EXTRUDE)} fill={shade(slice.color, 14, "#000")} />
                 </g>
               ))}
               {total <= 0 ? (
@@ -211,9 +210,9 @@ export function DonutChart({ slices, center }: { slices: Slice[]; center: string
           {Array.from({ length: DEPTH_LAYERS }, (_, index) => {
             const fromBottom = DEPTH_LAYERS - 1 - index;
             const t = index / Math.max(DEPTH_LAYERS - 1, 1);
-            const dim = 30 + t * 56;
-            const y = (fromBottom / DEPTH_LAYERS) * (EXTRUDE * 0.5);
-            const z = (fromBottom / DEPTH_LAYERS) * -12;
+            const dim = 32 + t * 54;
+            const y = (fromBottom / DEPTH_LAYERS) * (EXTRUDE * 0.48);
+            const z = (fromBottom / DEPTH_LAYERS) * -10;
             return (
               <div
                 key={fromBottom}
@@ -248,7 +247,7 @@ export function DonutChart({ slices, center }: { slices: Slice[]; center: string
           })}
 
           {/* Cara superior */}
-          <div className="donut-3d-layer donut-3d-top" style={{ transform: "translate3d(0, 0, 4px)", zIndex: DEPTH_LAYERS + 10 }}>
+          <div className="donut-3d-layer donut-3d-top" style={{ transform: "translate3d(0, 0, 3px)", zIndex: DEPTH_LAYERS + 10 }}>
             <svg viewBox="0 0 160 160" className="h-full w-full" aria-hidden="true">
               <defs>
                 {prepared.map((slice) => {
@@ -257,38 +256,39 @@ export function DonutChart({ slices, center }: { slices: Slice[]; center: string
                     <radialGradient
                       key={slice.id}
                       id={`top-${uid}-${slice.id}`}
-                      cx={`${40 + lit * 20}%`}
-                      cy={`${28 + (1 - lit) * 12}%`}
-                      r="80%"
+                      cx={`${38 + lit * 22}%`}
+                      cy={`${26 + (1 - lit) * 14}%`}
+                      r="82%"
                     >
-                      <stop offset="0%" stopColor={shade(slice.color, 50 + lit * 38, "#ffffff")} />
-                      <stop offset="46%" stopColor={slice.color} />
-                      <stop offset="100%" stopColor={shade(slice.color, 66 + (1 - lit) * 20, "#000000")} />
+                      <stop offset="0%" stopColor={shade(slice.color, 48 + lit * 40, "#ffffff")} />
+                      <stop offset="50%" stopColor={slice.color} />
+                      <stop offset="100%" stopColor={shade(slice.color, 64 + (1 - lit) * 22, "#000000")} />
                     </radialGradient>
                   );
                 })}
                 <linearGradient id={`bevel-out-${uid}`} x1="12%" y1="0%" x2="90%" y2="100%">
-                  <stop offset="0%" stopColor="rgba(255,255,255,0.75)" />
-                  <stop offset="42%" stopColor="rgba(255,255,255,0.1)" />
-                  <stop offset="100%" stopColor="rgba(0,0,0,0.45)" />
+                  <stop offset="0%" stopColor="rgba(255,255,255,0.7)" />
+                  <stop offset="45%" stopColor="rgba(255,255,255,0.08)" />
+                  <stop offset="100%" stopColor="rgba(0,0,0,0.4)" />
                 </linearGradient>
-                <linearGradient id={`bevel-in-${uid}`} x1="18%" y1="8%" x2="82%" y2="92%">
-                  <stop offset="0%" stopColor="rgba(255,255,255,0.5)" />
-                  <stop offset="100%" stopColor="rgba(0,0,0,0.42)" />
+                <linearGradient id={`bevel-in-${uid}`} x1="20%" y1="10%" x2="80%" y2="90%">
+                  <stop offset="0%" stopColor="rgba(255,255,255,0.42)" />
+                  <stop offset="100%" stopColor="rgba(0,0,0,0.38)" />
                 </linearGradient>
-                <linearGradient id={`spec-${uid}`} x1="8%" y1="0%" x2="72%" y2="88%">
-                  <stop offset="0%" stopColor="rgba(255,255,255,0.78)" />
-                  <stop offset="26%" stopColor="rgba(255,255,255,0.16)" />
-                  <stop offset="52%" stopColor="rgba(255,255,255,0)" />
+                <linearGradient id={`spec-${uid}`} x1="8%" y1="0%" x2="70%" y2="90%">
+                  <stop offset="0%" stopColor="rgba(255,255,255,0.7)" />
+                  <stop offset="30%" stopColor="rgba(255,255,255,0.14)" />
+                  <stop offset="58%" stopColor="rgba(255,255,255,0)" />
                 </linearGradient>
-                <radialGradient id={`ao-${uid}`} cx="50%" cy="48%" r="52%">
-                  <stop offset="62%" stopColor="rgba(0,0,0,0)" />
-                  <stop offset="100%" stopColor="rgba(0,0,0,0.42)" />
+                <radialGradient id={`hole-${uid}`} cx="42%" cy="36%" r="60%">
+                  <stop offset="0%" stopColor="color-mix(in srgb, var(--card) 55%, transparent)" />
+                  <stop offset="70%" stopColor="color-mix(in srgb, var(--paper) 35%, transparent)" />
+                  <stop offset="100%" stopColor="rgba(0,0,0,0.2)" />
                 </radialGradient>
                 <linearGradient id={`shimmer-${uid}`} x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="rgba(255,255,255,0)" />
-                  <stop offset="46%" stopColor="rgba(255,255,255,0.32)" />
-                  <stop offset="54%" stopColor="rgba(255,255,255,0.04)" />
+                  <stop offset="48%" stopColor="rgba(255,255,255,0.28)" />
+                  <stop offset="56%" stopColor="rgba(255,255,255,0.04)" />
                   <stop offset="100%" stopColor="rgba(255,255,255,0)" />
                 </linearGradient>
               </defs>
@@ -312,9 +312,9 @@ export function DonutChart({ slices, center }: { slices: Slice[]; center: string
                 ))
               )}
 
-              <circle cx="80" cy="80" r={rOuter} fill="none" stroke={`url(#bevel-out-${uid})`} strokeWidth="3" />
-              <circle cx="80" cy="80" r={rInner} fill="none" stroke={`url(#bevel-in-${uid})`} strokeWidth="2.2" />
-              <circle cx="80" cy="80" r={rInner + 1.4} fill="none" stroke="rgba(0,0,0,0.38)" strokeWidth="1.2" />
+              <circle cx="80" cy="80" r={rOuter} fill="none" stroke={`url(#bevel-out-${uid})`} strokeWidth="2.6" />
+              <circle cx="80" cy="80" r={rInner} fill="none" stroke={`url(#bevel-in-${uid})`} strokeWidth="2" />
+              <circle cx="80" cy="80" r={rInner + 1.2} fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="1" />
               <circle
                 cx="80"
                 cy="80"
@@ -323,7 +323,8 @@ export function DonutChart({ slices, center }: { slices: Slice[]; center: string
                 stroke={`url(#spec-${uid})`}
                 strokeWidth={rOuter - rInner - 1}
               />
-              <circle cx="80" cy="80" r={rInner - 0.4} fill={`url(#ao-${uid})`} />
+              {/* Hueco limpio, sin precio */}
+              <circle cx="80" cy="80" r={rInner - 0.8} fill={`url(#hole-${uid})`} />
               <circle
                 className="donut-shimmer"
                 cx="80"
@@ -332,15 +333,9 @@ export function DonutChart({ slices, center }: { slices: Slice[]; center: string
                 fill="none"
                 stroke={`url(#shimmer-${uid})`}
                 strokeWidth={rOuter - rInner}
-                strokeDasharray="80 360"
+                strokeDasharray="70 350"
               />
             </svg>
-          </div>
-        </div>
-
-        <div className="pointer-events-none absolute inset-x-0 top-[46%] z-20 flex -translate-y-1/2 justify-center px-12">
-          <div className="donut-3d-chip px-4 py-2 text-center">
-            <p className="font-display text-base leading-tight tracking-tight sm:text-lg">{center}</p>
           </div>
         </div>
       </div>
