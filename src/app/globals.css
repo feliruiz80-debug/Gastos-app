@@ -139,9 +139,12 @@ textarea {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.1rem;
+  gap: 0.05rem;
   text-align: center;
-  line-height: 0.95;
+  line-height: 1.05;
+  /* Evita que la “g” u otras bajadas se corten con el clip del gradiente. */
+  overflow: visible;
+  padding-bottom: 0.55rem;
 }
 
 .brand-kicker {
@@ -155,10 +158,13 @@ textarea {
 
 .brand-name {
   position: relative;
+  display: inline-block;
   font-family: var(--font-display);
   font-size: clamp(2.6rem, 8vw, 3.75rem);
   font-weight: 700;
+  line-height: 1.12;
   letter-spacing: -0.045em;
+  padding-bottom: 0.12em;
   background: linear-gradient(
     115deg,
     color-mix(in srgb, var(--ink) 88%, #c4a574) 0%,
@@ -170,6 +176,8 @@ textarea {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
   animation: brand-sheen 7s ease-in-out infinite;
 }
 
@@ -177,7 +185,7 @@ textarea {
   content: "";
   position: absolute;
   left: 50%;
-  bottom: -0.45rem;
+  bottom: 0.08em;
   width: min(7.5rem, 55%);
   height: 2px;
   transform: translateX(-50%);

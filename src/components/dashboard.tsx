@@ -105,9 +105,9 @@ export function Dashboard(props: DashboardProps) {
     .join(". ");
 
   return (
-    <div className="mx-auto min-h-screen max-w-6xl px-4 py-6 pb-32 sm:px-6 sm:pt-10 sm:pb-32">
-      <header className="space-y-5">
-        <div className="flex flex-col items-center gap-6">
+    <div className="mx-auto min-h-screen max-w-6xl px-4 pt-3 pb-32 sm:px-6 sm:pt-5 sm:pb-32">
+      <header className="space-y-4">
+        <div className="flex flex-col items-center gap-5">
           <h1 className="brand-title">
             <span className="brand-kicker">Money</span>
             <span className="brand-name">Manager</span>
