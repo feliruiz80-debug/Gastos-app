@@ -66,5 +66,6 @@ export function emptyData() {
     accounts: defaultAccounts.map((account) => ({ ...account })),
     transactions: [],
     investments: [],
+    fixedExpenses: [],
   };
 }

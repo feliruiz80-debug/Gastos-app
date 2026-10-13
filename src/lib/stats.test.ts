@@ -1,7 +1,17 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { accountBalances, availableBalance, balanceOf, categoryBreakdown, inMonth, sumAmount } from "./stats";
-import type { Account, Category, Transaction } from "./types";
+import {
+  accountBalances,
+  activeFixedTotal,
+  availableBalance,
+  balanceOf,
+  categoryBreakdown,
+  fixedPaidIds,
+  fixedPendingTotal,
+  inMonth,
+  sumAmount,
+} from "./stats";
+import type { Account, Category, FixedExpense, Transaction } from "./types";
 
 const categories: Category[] = [
   { id: "comida", name: "Supermercado", type: "expense", color: "#c4491d", monthlyBudget: 200 },
@@ -66,5 +76,54 @@ describe("estadísticas", () => {
     assert.equal(byName["Mercado Pago"], 0 - 200 + 300);
     assert.equal(byName["Tarjeta de crédito"], -80);
     assert.equal(availableBalance(accounts, transactions), 500 + 670);
+  });
+
+  it("suma gastos fijos y detecta los ya registrados en el mes", () => {
+    const fixed: FixedExpense[] = [
+      {
+        id: "fix-1",
+        name: "Alquiler",
+        amount: 200,
+        categoryId: "comida",
+        accountId: "banco",
+        dayOfMonth: 5,
+        note: "",
+        active: true,
+      },
+      {
+        id: "fix-2",
+        name: "Netflix",
+        amount: 10,
+        categoryId: "ocio",
+        accountId: "mp",
+        dayOfMonth: 12,
+        note: "",
+        active: true,
+      },
+      {
+        id: "fix-3",
+        name: "Pausado",
+        amount: 50,
+        categoryId: "ocio",
+        accountId: "mp",
+        dayOfMonth: 1,
+        note: "",
+        active: false,
+      },
+    ];
+    const paidTx = [
+      tx({
+        type: "expense",
+        amount: 200,
+        categoryId: "comida",
+        accountId: "banco",
+        date: "2026-10-05",
+        fixedExpenseId: "fix-1",
+      }),
+    ];
+    assert.equal(activeFixedTotal(fixed), 210);
+    const paid = fixedPaidIds(paidTx, "2026-10");
+    assert.equal(paid.has("fix-1"), true);
+    assert.equal(fixedPendingTotal(fixed, paid), 10);
   });
 });

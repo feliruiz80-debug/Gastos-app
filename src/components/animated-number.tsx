@@ -8,71 +8,61 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"] as const;
+function easeOutCubic(t: number): number {
+  return 1 - (1 - t) ** 3;
+}
 
-function OdometerDigit({
-  digit,
-  place,
-}: {
-  digit: string;
-  place: number;
-}) {
-  const target = Number(digit);
-  const [offset, setOffset] = useState(0);
-  const [durationMs, setDurationMs] = useState(0);
-  const prevRef = useRef<number | null>(null);
-  const offsetRef = useRef(0);
-  const mounted = useRef(false);
+/** Cuenta suave hacia el monto nuevo; si llega otro cambio a mitad de camino, sigue desde el valor actual. */
+function useSmoothMoney(target: number): number {
+  const [current, setCurrent] = useState(target);
+  const currentRef = useRef(target);
+  const rafRef = useRef(0);
+  const primed = useRef(false);
 
   useEffect(() => {
-    const reduced = prefersReducedMotion();
-
-    if (prevRef.current === target && mounted.current) return;
-
-    if (reduced) {
-      prevRef.current = target;
-      offsetRef.current = target;
-      setDurationMs(0);
-      setOffset(target);
-      mounted.current = true;
+    if (!primed.current) {
+      primed.current = true;
+      currentRef.current = target;
+      setCurrent(target);
       return;
     }
 
-    const from = prevRef.current ?? 0;
-    const current = offsetRef.current;
-    const spins = (mounted.current ? 1 : 2) + Math.min(place, 4);
-    const forward = (target - from + 10) % 10;
-    const next = current - (current % 10) + from + spins * 10 + forward;
-
-    prevRef.current = target;
-    offsetRef.current = next;
-    setDurationMs(800 + place * 200);
-    if (!mounted.current) {
-      setOffset(0);
-      requestAnimationFrame(() => setOffset(next));
-    } else {
-      setOffset(next);
+    if (Math.abs(currentRef.current - target) < 0.005) {
+      currentRef.current = target;
+      setCurrent(target);
+      return;
     }
-    mounted.current = true;
-  }, [target, place]);
 
-  return (
-    <span className="odometer-digit" aria-hidden="true">
-      <span
-        className="odometer-reel"
-        style={{
-          transform: `translate3d(0, calc(-${offset} * var(--odometer-h)), 0)`,
-          transitionDuration: `${durationMs}ms`,
-        }}
-      >
-        {Array.from({ length: 80 }, (_, index) => (
-          <span key={index} className="odometer-glyph">
-            {DIGITS[index % 10]}
-          </span>
-        ))}
-      </span>
-    </span>
-  );
+    if (prefersReducedMotion()) {
+      currentRef.current = target;
+      setCurrent(target);
+      return;
+    }
+
+    const from = currentRef.current;
+    const delta = target - from;
+    const duration = Math.min(850, 280 + Math.abs(delta) ** 0.4 * 16);
+    const started = performance.now();
+    cancelAnimationFrame(rafRef.current);
+
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - started) / duration);
+      const next = from + delta * easeOutCubic(progress);
+      currentRef.current = next;
+      setCurrent(next);
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+      currentRef.current = target;
+      setCurrent(target);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [target]);
+
+  return current;
 }
 
 type AnimatedMoneyProps = {
@@ -82,32 +72,15 @@ type AnimatedMoneyProps = {
 };
 
 export function AnimatedMoney({ value, className = "", signed = false }: AnimatedMoneyProps) {
-  const formatted = formatMoney(Math.abs(value));
-  const sign = signed ? (value < 0 ? "−" : "+") : value < 0 ? "−" : "";
+  const animated = useSmoothMoney(value);
+  const display = Math.round(animated * 100) / 100;
+  const formatted = formatMoney(Math.abs(display)).replace(/\u00a0/g, " ");
+  const sign = signed ? (display < 0 ? "−" : "+") : display < 0 ? "−" : "";
   const text = `${sign}${formatted}`;
-
-  const digitPlaces: number[] = [];
-  let place = 0;
-  for (let i = text.length - 1; i >= 0; i -= 1) {
-    if (/\d/.test(text[i]!)) {
-      digitPlaces[i] = place;
-      place += 1;
-    }
-  }
 
   return (
     <span className={`odometer tabular-nums ${className}`} aria-label={text}>
-      {Array.from(text).map((char, index) => {
-        if (/\d/.test(char)) {
-          const digitPlace = digitPlaces[index] ?? 0;
-          return <OdometerDigit key={`p-${digitPlace}`} digit={char} place={digitPlace} />;
-        }
-        return (
-          <span key={`s-${index}-${char}`} className="odometer-static" aria-hidden="true">
-            {char}
-          </span>
-        );
-      })}
+      {text}
     </span>
   );
 }

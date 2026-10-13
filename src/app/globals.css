@@ -393,57 +393,14 @@ textarea {
 }
 
 .odometer {
-  --odometer-h: 1em;
-  display: inline-flex;
-  align-items: center;
-  height: var(--odometer-h);
-  line-height: var(--odometer-h);
-  overflow: hidden;
-}
-
-.odometer-digit {
-  position: relative;
   display: inline-block;
-  flex: 0 0 auto;
-  width: 0.65em;
-  height: var(--odometer-h);
-  /* Recorte duro: evita bordes del dígito de arriba/abajo. */
-  overflow: clip;
-  clip-path: inset(0.08em 0);
-  contain: paint;
-  vertical-align: middle;
-}
-
-.odometer-reel {
-  display: block;
-  transition-property: transform;
-  transition-timing-function: cubic-bezier(0.16, 0.84, 0.28, 1);
-  will-change: transform;
-  backface-visibility: hidden;
-}
-
-.odometer-glyph {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--odometer-h);
-  line-height: var(--odometer-h);
-  overflow: hidden;
-  text-align: center;
-}
-
-.odometer-static {
-  display: inline-flex;
-  align-items: center;
-  height: var(--odometer-h);
-  line-height: var(--odometer-h);
-  white-space: pre;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .nav-pill,
-  .chart-bar,
-  .odometer-reel {
+  .chart-bar {
     transition: none;
   }
 

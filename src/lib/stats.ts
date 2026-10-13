@@ -1,4 +1,4 @@
-import type { Account, Category, Transaction, TxType } from "./types";
+import type { Account, Category, FixedExpense, Transaction, TxType } from "./types";
 
 export function sumAmount(transactions: Transaction[], type?: Exclude<TxType, "transfer">): number {
   return transactions.reduce((total, transaction) => {
@@ -116,5 +116,30 @@ export function accountBalances(accounts: Account[], transactions: Transaction[]
 export function availableBalance(accounts: Account[], transactions: Transaction[]): number {
   return roundMoney(
     accountBalances(accounts, transactions).reduce((total, item) => total + item.balance, 0),
+  );
+}
+
+export function activeFixedTotal(fixedExpenses: FixedExpense[]): number {
+  return roundMoney(
+    fixedExpenses.reduce((total, item) => (item.active ? total + item.amount : total), 0),
+  );
+}
+
+export function fixedPaidIds(transactions: Transaction[], month: string): Set<string> {
+  const paid = new Set<string>();
+  for (const transaction of transactions) {
+    if (transaction.type !== "expense" || !transaction.fixedExpenseId) continue;
+    if (!transaction.date.startsWith(month)) continue;
+    paid.add(transaction.fixedExpenseId);
+  }
+  return paid;
+}
+
+export function fixedPendingTotal(fixedExpenses: FixedExpense[], paidIds: Set<string>): number {
+  return roundMoney(
+    fixedExpenses.reduce((total, item) => {
+      if (!item.active || paidIds.has(item.id)) return total;
+      return total + item.amount;
+    }, 0),
   );
 }

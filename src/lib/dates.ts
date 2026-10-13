@@ -60,6 +60,14 @@ export function defaultDateForMonth(month: string, now = new Date()): string {
   return `${month}-01`;
 }
 
+/** Fecha ISO para un día del mes (1–28), acotada al último día real del mes. */
+export function dateInMonth(month: string, dayOfMonth: number): string {
+  const [year, monthIndex] = month.split("-").map(Number);
+  const lastDay = new Date(year, monthIndex, 0).getDate();
+  const day = Math.min(Math.max(1, Math.floor(dayOfMonth) || 1), Math.min(28, lastDay));
+  return `${month}-${String(day).padStart(2, "0")}`;
+}
+
 export function formatGroupDate(iso: string, today = toISODate(new Date())): string {
   if (iso === today) return "Hoy";
   const [year, month, day] = today.split("-").map(Number);

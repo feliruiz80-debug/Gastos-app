@@ -131,5 +131,11 @@ export function applySeed(data: AppData, now = new Date()): AppData {
   for (const account of defaultAccounts) {
     if (!accounts.some((item) => item.id === account.id)) accounts.push({ ...account });
   }
-  return { categories, accounts, transactions: buildSeed(now), investments: data.investments ?? [] };
+  return {
+    categories,
+    accounts,
+    transactions: buildSeed(now),
+    investments: data.investments ?? [],
+    fixedExpenses: data.fixedExpenses ?? [],
+  };
 }

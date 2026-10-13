@@ -63,6 +63,42 @@ describe("respaldo", () => {
     assert.equal(sanitized?.investments[1]?.units, 0);
     assert.equal(sanitized?.investments[2]?.kind, "cedear");
     assert.equal(sanitized?.investments[2]?.symbol, "AAPL.BA");
+    assert.deepEqual(sanitized?.fixedExpenses, []);
+  });
+
+  it("conserva gastos fijos y el vínculo con movimientos", () => {
+    const sanitized = sanitizeData({
+      categories: [{ id: "cat-vivienda", name: "Vivienda", type: "expense", color: "#7c3aed", monthlyBudget: 0 }],
+      accounts: [{ id: "acc-banco", name: "Banco", color: "#0369a1", openingBalance: 0 }],
+      transactions: [
+        {
+          id: "tx-1",
+          type: "expense",
+          amount: 200000,
+          categoryId: "cat-vivienda",
+          accountId: "acc-banco",
+          note: "Alquiler",
+          date: "2026-10-05",
+          createdAt: "2026-10-05T12:00:00.000Z",
+          fixedExpenseId: "fix-1",
+        },
+      ],
+      fixedExpenses: [
+        {
+          id: "fix-1",
+          name: "Alquiler",
+          amount: 200000,
+          categoryId: "cat-vivienda",
+          accountId: "acc-banco",
+          dayOfMonth: 5,
+          note: "",
+          active: true,
+        },
+      ],
+    });
+    assert.equal(sanitized?.fixedExpenses.length, 1);
+    assert.equal(sanitized?.fixedExpenses[0]?.name, "Alquiler");
+    assert.equal(sanitized?.transactions[0]?.fixedExpenseId, "fix-1");
   });
 
   it("rechaza archivos que no son un respaldo", () => {

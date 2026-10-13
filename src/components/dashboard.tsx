@@ -12,6 +12,8 @@ type DashboardProps = {
   balance: number;
   income: number;
   expense: number;
+  fixedTotal: number;
+  fixedPending: number;
   series: { month: string; income: number; expense: number }[];
   categoryView: Exclude<TxType, "transfer">;
   categoryTotals: CategoryTotal[];
@@ -34,6 +36,7 @@ type DashboardProps = {
   onEdit: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
   onOpenFlow: (type: "income" | "expense") => void;
+  onOpenFixed: () => void;
   onSync: () => void;
 };
 
@@ -55,6 +58,8 @@ export function Dashboard(props: DashboardProps) {
     balance,
     income,
     expense,
+    fixedTotal,
+    fixedPending,
     series,
     categoryView,
     categoryTotals,
@@ -77,6 +82,7 @@ export function Dashboard(props: DashboardProps) {
     onEdit,
     onDelete,
     onOpenFlow,
+    onOpenFixed,
     onSync,
   } = props;
   const todayMonth = currentMonth();
@@ -218,6 +224,28 @@ export function Dashboard(props: DashboardProps) {
               signed
             />
           </section>
+          {scope === "month" ? (
+            <button
+              type="button"
+              onClick={onOpenFixed}
+              className="glass mt-3 flex w-full items-center justify-between gap-3 rounded-3xl p-4 text-left transition hover:bg-card"
+            >
+              <div>
+                <p className="text-sm text-muted">Gastos fijos del mes</p>
+                <p className="mt-1 font-display text-2xl tracking-tight">
+                  <AnimatedMoney value={fixedTotal} />
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  {fixedPending > 0
+                    ? `Pendiente por registrar: ${formatMoney(fixedPending)}`
+                    : fixedTotal > 0
+                      ? "Todos los fijos activos ya están registrados"
+                      : "Tocá para cargar alquiler, servicios y suscripciones"}
+                </p>
+              </div>
+              <span className="rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-paper">Fijos</span>
+            </button>
+          ) : null}
           {note ? <p className="mt-4 text-sm text-muted">{note}</p> : null}
 
           <section className="mt-6">

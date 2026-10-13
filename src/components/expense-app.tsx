@@ -3,19 +3,30 @@
 import { useEffect, useRef, useState } from "react";
 import { sanitizeData, toBackup } from "@/lib/backup";
 import { positionValue } from "@/lib/market";
-import { defaultDateForMonth, formatMonth, lastMonths, toISODate } from "@/lib/dates";
+import { dateInMonth, defaultDateForMonth, formatMonth, lastMonths, toISODate } from "@/lib/dates";
 import { emptyData } from "@/lib/defaults";
 import { mergeSheet } from "@/lib/mergeSheet";
 import { amountToInput } from "@/lib/money";
 import { applySeed } from "@/lib/seed";
 import type { SheetPayload } from "@/lib/sheets";
-import { accountBalances, availableBalance, categoryBreakdown, inMonth, monthSeries, sumAmount } from "@/lib/stats";
+import {
+  accountBalances,
+  activeFixedTotal,
+  availableBalance,
+  categoryBreakdown,
+  fixedPaidIds,
+  fixedPendingTotal,
+  inMonth,
+  monthSeries,
+  sumAmount,
+} from "@/lib/stats";
 import { loadData, saveData } from "@/lib/storage";
-import type { Account, AppData, Category, Investment, Transaction, TxType } from "@/lib/types";
+import type { Account, AppData, Category, FixedExpense, Investment, Transaction, TxType } from "@/lib/types";
 import { AccountsDialog } from "./accounts-dialog";
 import { BottomNav, type AppTab } from "./bottom-nav";
 import { CategoryDialog } from "./category-dialog";
 import { Dashboard } from "./dashboard";
+import { FixedExpensesView } from "./fixed-expenses-view";
 import { FlowPanel } from "./flow-panel";
 import { InvestmentsView } from "./investments-view";
 import { Modal } from "./modal";
@@ -219,6 +230,9 @@ export function ExpenseApp() {
     if (data.transactions.some((transaction) => transaction.categoryId === id)) {
       return "Hay movimientos con esta categoría. Cambiales la categoría o eliminalos antes.";
     }
+    if ((data.fixedExpenses ?? []).some((item) => item.categoryId === id)) {
+      return "Hay un gasto fijo con esta categoría. Cambialo o eliminalo antes.";
+    }
     commit({ ...data, categories: data.categories.filter((category) => category.id !== id) });
     showToast("Categoría eliminada");
     return null;
@@ -256,10 +270,77 @@ export function ExpenseApp() {
     if (data.transactions.some((transaction) => transaction.accountId === id || transaction.toAccountId === id)) {
       return "Hay movimientos en esta cuenta. Pasalos a otra o eliminalos antes.";
     }
+    if ((data.fixedExpenses ?? []).some((item) => item.accountId === id)) {
+      return "Hay un gasto fijo en esta cuenta. Cambialo o eliminalo antes.";
+    }
     commit({ ...data, accounts: data.accounts.filter((account) => account.id !== id) });
     if (accountFilter === id) setAccountFilter("all");
     showToast("Cuenta eliminada");
     return null;
+  }
+
+  function saveFixedExpense(item: FixedExpense): string | null {
+    if (!data) return "No se pudo guardar.";
+    const list = data.fixedExpenses ?? [];
+    const duplicate = list.some(
+      (entry) => entry.id !== item.id && entry.name.toLowerCase() === item.name.toLowerCase(),
+    );
+    if (duplicate) return "Ya existe un gasto fijo con ese nombre.";
+    if (list.length >= 40 && !list.some((entry) => entry.id === item.id)) {
+      return "Llegaste al máximo de gastos fijos.";
+    }
+    const exists = list.some((entry) => entry.id === item.id);
+    commit({
+      ...data,
+      fixedExpenses: exists ? list.map((entry) => (entry.id === item.id ? item : entry)) : [...list, item],
+    });
+    showToast(exists ? "Gasto fijo actualizado" : "Gasto fijo guardado");
+    return null;
+  }
+
+  function deleteFixedExpense(id: string) {
+    if (!data) return;
+    commit({
+      ...data,
+      fixedExpenses: (data.fixedExpenses ?? []).filter((item) => item.id !== id),
+      transactions: data.transactions.map((transaction) =>
+        transaction.fixedExpenseId === id ? { ...transaction, fixedExpenseId: undefined } : transaction,
+      ),
+    });
+    showToast("Gasto fijo eliminado");
+  }
+
+  function registerFixedExpense(id: string) {
+    if (!data) return;
+    const item = (data.fixedExpenses ?? []).find((entry) => entry.id === id);
+    if (!item || !item.active) return;
+    if (fixedPaidIds(data.transactions, month).has(id)) {
+      showToast("Ese fijo ya está registrado este mes");
+      return;
+    }
+    const transaction: Transaction = {
+      id: crypto.randomUUID(),
+      type: "expense",
+      amount: item.amount,
+      categoryId: item.categoryId,
+      accountId: item.accountId,
+      note: item.note || item.name,
+      date: dateInMonth(month, item.dayOfMonth),
+      createdAt: new Date().toISOString(),
+      fixedExpenseId: item.id,
+    };
+    commit({ ...data, transactions: [...data.transactions, transaction] });
+    showToast("Gasto fijo registrado en el mes");
+  }
+
+  function unregisterFixedExpense(id: string) {
+    if (!data) return;
+    const next = data.transactions.filter(
+      (transaction) => !(transaction.fixedExpenseId === id && transaction.date.startsWith(month)),
+    );
+    if (next.length === data.transactions.length) return;
+    commit({ ...data, transactions: next });
+    showToast("Registro del fijo deshecho");
   }
 
   function exportBackup() {
@@ -293,7 +374,7 @@ export function ExpenseApp() {
     }
     setConfirm({
       title: "Importar respaldo",
-      body: "Esto reemplaza las categorías, las cuentas y los movimientos de este navegador.",
+      body: "Esto reemplaza categorías, cuentas, movimientos, inversiones y gastos fijos de este navegador.",
       confirmLabel: "Reemplazar",
       action: () => {
         commit(next);
@@ -393,6 +474,10 @@ export function ExpenseApp() {
 
   const dialogsClosed = !categoriesOpen && !accountsOpen && !confirm;
   const periodLabel = scope === "month" ? formatMonth(month) : "Todo el historial";
+  const fixedList = data.fixedExpenses ?? [];
+  const fixedPaid = fixedPaidIds(data.transactions, month);
+  const fixedTotal = activeFixedTotal(fixedList);
+  const fixedPending = fixedPendingTotal(fixedList, fixedPaid);
 
   return (
     <>
@@ -404,6 +489,8 @@ export function ExpenseApp() {
         balance={availableBalance(data.accounts, data.transactions)}
         income={sumAmount(period, "income")}
         expense={sumAmount(period, "expense")}
+        fixedTotal={fixedTotal}
+        fixedPending={fixedPending}
         series={monthSeries(data.transactions, lastMonths(chartAnchor, 6))}
         categoryView={categoryView}
         categoryTotals={categoryBreakdown(period, data.categories, categoryView, scope === "month" ? month : "all")}
@@ -426,8 +513,23 @@ export function ExpenseApp() {
         onEdit={openEdit}
         onDelete={askDelete}
         onOpenFlow={setFlow}
+        onOpenFixed={() => setTab("fixed")}
         onSync={() => void syncSheet()}
       />
+      ) : null}
+      {tab === "fixed" ? (
+        <FixedExpensesView
+          month={month}
+          fixedExpenses={fixedList}
+          categories={data.categories}
+          accounts={data.accounts}
+          transactions={data.transactions}
+          onSave={saveFixedExpense}
+          onDelete={deleteFixedExpense}
+          onRegister={registerFixedExpense}
+          onUnregister={unregisterFixedExpense}
+          onOpenMonth={() => setTab("home")}
+        />
       ) : null}
       {tab === "investments" ? (
         <InvestmentsView

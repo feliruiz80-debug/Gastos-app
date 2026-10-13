@@ -118,5 +118,11 @@ export function mergeSheet(data: AppData, payload: SheetPayload, now = new Date(
     byId.set(id, next);
   });
 
-  return { categories, accounts, transactions, investments: data.investments ?? [] };
+  return {
+    categories,
+    accounts,
+    transactions,
+    investments: data.investments ?? [],
+    fixedExpenses: data.fixedExpenses ?? [],
+  };
 }
