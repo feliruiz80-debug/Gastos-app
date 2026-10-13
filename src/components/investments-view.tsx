@@ -8,12 +8,12 @@ import { AnimatedMoney } from "./animated-number";
 import { DonutChart } from "./donut-chart";
 
 const KINDS: { id: InvestmentKind; label: string; color: string }[] = [
-  { id: "plazo", label: "Plazo fijo", color: "#3b82f6" },
-  { id: "acciones", label: "Acciones", color: "#22c55e" },
-  { id: "cedear", label: "CEDEAR", color: "#14b8a6" },
-  { id: "fondo", label: "Fondo", color: "#a855f7" },
-  { id: "cripto", label: "Cripto", color: "#f59e0b" },
-  { id: "otro", label: "Otro", color: "#fb7185" },
+  { id: "plazo", label: "Plazo fijo", color: "#1d4ed8" },
+  { id: "acciones", label: "Acciones", color: "#1b7f4e" },
+  { id: "cedear", label: "CEDEAR", color: "#0f766e" },
+  { id: "fondo", label: "Fondo", color: "#6d28d9" },
+  { id: "cripto", label: "Cripto", color: "#b45309" },
+  { id: "otro", label: "Otro", color: "#57534e" },
 ];
 
 type InvestmentsViewProps = {

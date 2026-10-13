@@ -1,29 +1,25 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { hexToRgb, vivid, withAlpha } from "./colors";
+import { hexToRgb, withAlpha } from "./colors";
+import { upgradeDefaultColors } from "./defaults";
 
-describe("colores vivos", () => {
-  it("prende un naranja apagado", () => {
-    const next = vivid("#c4491d");
-    const rgb = hexToRgb(next);
-    assert.ok(rgb);
-    // Queda más brillante/saturado que el original.
-    const original = hexToRgb("#c4491d");
-    assert.ok(original);
-    assert.ok(rgb.r + rgb.g + rgb.b > original.r + original.g + original.b - 20);
-    assert.match(next, /^#[0-9a-f]{6}$/i);
-  });
-
-  it("rescata grises apagados", () => {
-    const next = vivid("#57534e");
-    const rgb = hexToRgb(next);
-    assert.ok(rgb);
-    const max = Math.max(rgb.r, rgb.g, rgb.b);
-    const min = Math.min(rgb.r, rgb.g, rgb.b);
-    assert.ok(max - min > 40);
-  });
-
+describe("colores", () => {
   it("arma rgba con alpha", () => {
-    assert.equal(withAlpha("#22c55e", 0.5), "rgba(34, 197, 94, 0.5)");
+    assert.equal(withAlpha("#1b7f4e", 0.5), "rgba(27, 127, 78, 0.5)");
+    assert.ok(hexToRgb("#c4491d"));
+  });
+
+  it("saca los colores flúor viejos de las categorías por defecto", () => {
+    const upgraded = upgradeDefaultColors(
+      [
+        { id: "cat-super", color: "#ff5a1f" },
+        { id: "cat-sueldo", color: "#22c55e" },
+        { id: "cat-custom", color: "#abcdef" },
+      ],
+      "category",
+    );
+    assert.equal(upgraded[0]?.color, "#c4491d");
+    assert.equal(upgraded[1]?.color, "#1b7f4e");
+    assert.equal(upgraded[2]?.color, "#abcdef");
   });
 });

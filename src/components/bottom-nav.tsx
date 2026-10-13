@@ -91,15 +91,16 @@ function TabIcon({ name }: { name: "home" | "fixed" | "invest" | "settings" }) {
       </svg>
     );
   }
-  // Tuerca clásica (engranaje) para Ajustes.
+  // Tuerca de Ajustes: engranaje centrado (6 dientes) con el mismo trazo que el resto.
   return (
     <svg {...common}>
       <path
-        fill="currentColor"
-        fillRule="evenodd"
-        d="M14.2 4.2h3.6l.55 2.05c.55.2 1.07.47 1.54.8l2.05-.7 2.55 2.55-.7 2.05c.33.47.6.99.8 1.54L27.8 14.2v3.6l-2.05.55c-.2.55-.47 1.07-.8 1.54l.7 2.05-2.55 2.55-2.05-.7a7.4 7.4 0 0 1-1.54.8l-.55 2.05h-3.6l-.55-2.05a7.4 7.4 0 0 1-1.54-.8l-2.05.7-2.55-2.55.7-2.05a7.4 7.4 0 0 1-.8-1.54L4.2 17.8v-3.6l2.05-.55c.2-.55.47-1.07.8-1.54l-.7-2.05 2.55-2.55 2.05.7c.47-.33.99-.6 1.54-.8L14.2 4.2Zm1.8 7.2a4.6 4.6 0 1 0 0 9.2 4.6 4.6 0 0 0 0-9.2Zm0 2.4a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4Z"
-        clipRule="evenodd"
+        d="M13.38 8.23 13.79 5.02h4.42l.41 3.21 2.8 1.62 2.98-1.26 2.22 3.84-2.58 1.95v3.24l2.58 1.95-2.22 3.84-2.98-1.26-2.8 1.62-.41 3.21h-4.42l-.41-3.21-2.8-1.62-2.98 1.26-2.22-3.84 2.58-1.95v-3.24L5.38 12.43l2.22-3.84 2.98 1.26 2.8-1.62Z"
+        stroke="currentColor"
+        strokeWidth="2.1"
+        strokeLinejoin="round"
       />
+      <circle cx="16" cy="16" r="3.5" stroke="currentColor" strokeWidth="2.1" />
     </svg>
   );
 }
