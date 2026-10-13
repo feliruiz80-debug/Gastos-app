@@ -109,8 +109,7 @@ export function Dashboard(props: DashboardProps) {
       <header className="space-y-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-medium tracking-wide text-muted">Pesos, cuentas y presupuestos</p>
-            <h1 className="font-display text-4xl tracking-tight sm:text-5xl">Gastos</h1>
+            <h1 className="font-display text-4xl tracking-tight sm:text-5xl">Money Manager</h1>
           </div>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => onAdd("income")} className="rounded-full bg-income-solid px-4 py-2.5 text-sm font-semibold text-white">

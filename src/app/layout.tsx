@@ -12,12 +12,12 @@ const inter = Inter({
 const themeScript = `(function(){try{var t=localStorage.getItem("gastos-tema");if(t!=="light"&&t!=="dark"){t=window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}var r=document.documentElement;r.setAttribute("data-theme",t);r.style.colorScheme=t;var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",t==="dark"?"#100e0c":"#f6f1e8");}catch(e){}})();`;
 
 export const metadata: Metadata = {
-  title: "Gastos",
+  title: "Money Manager",
   description: "Ingresos, gastos, cuentas y presupuestos personales en pesos.",
-  applicationName: "Gastos",
+  applicationName: "Money Manager",
   appleWebApp: {
     capable: true,
-    title: "Gastos",
+    title: "Money Manager",
     statusBarStyle: "black-translucent",
   },
 };
