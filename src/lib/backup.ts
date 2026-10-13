@@ -1,4 +1,4 @@
-import { defaultAccounts, defaultCategories } from "./defaults";
+import { defaultAccounts, defaultCategories, upgradeDefaultColors } from "./defaults";
 import { isValidISODate } from "./dates";
 import type {
   Account,
@@ -242,8 +242,8 @@ export function sanitizeData(input: unknown): AppData | null {
   }));
 
   return {
-    categories: safeCategories,
-    accounts: safeAccounts,
+    categories: upgradeDefaultColors(safeCategories, "category"),
+    accounts: upgradeDefaultColors(safeAccounts, "account"),
     transactions,
     investments,
     fixedExpenses,

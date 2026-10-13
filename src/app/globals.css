@@ -243,13 +243,13 @@ textarea {
 }
 
 .donut-3d-scene {
-  perspective: 1000px;
-  perspective-origin: 50% 45%;
+  perspective: 1100px;
+  perspective-origin: 50% 42%;
   opacity: 0;
-  transform: translateY(12px) scale(0.95);
+  transform: translateY(14px) scale(0.92);
   transition:
-    opacity 650ms cubic-bezier(0.22, 1.2, 0.36, 1),
-    transform 750ms cubic-bezier(0.22, 1.4, 0.36, 1);
+    opacity 700ms cubic-bezier(0.22, 1.2, 0.36, 1),
+    transform 820ms cubic-bezier(0.22, 1.45, 0.36, 1);
 }
 
 .donut-3d-scene.donut-3d-ready {
@@ -259,39 +259,48 @@ textarea {
 
 .donut-3d-shadow {
   position: absolute;
-  left: 14%;
-  right: 14%;
-  bottom: 6%;
-  height: 18%;
+  left: 12%;
+  right: 12%;
+  bottom: 4%;
+  height: 20%;
   border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.5), transparent 72%);
-  filter: blur(14px);
-  transform: translateY(8px) scaleY(0.52);
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55), transparent 74%);
+  filter: blur(16px);
+  transform: translateY(10px) scaleY(0.5);
   pointer-events: none;
 }
 
 .donut-3d-glow {
   position: absolute;
-  inset: 14% 12% 20%;
+  inset: 10% 8% 16%;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 30% 24%, color-mix(in srgb, var(--income) 18%, transparent), transparent 64%),
-    radial-gradient(circle at 74% 72%, color-mix(in srgb, var(--expense) 12%, transparent), transparent 62%);
-  filter: blur(24px);
-  opacity: 0.75;
+  filter: blur(28px);
+  opacity: 0.95;
+  pointer-events: none;
+  animation: donut-glow-pulse 5.5s ease-in-out infinite;
+}
+
+.donut-3d-ring {
+  position: absolute;
+  inset: 11% 14% 18%;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 40px rgba(255, 255, 255, 0.05);
   pointer-events: none;
 }
 
 .donut-3d-tilt {
   position: absolute;
-  inset: 6% 9% 14%;
+  inset: 5% 8% 13%;
   transform-style: preserve-3d;
-  transition: transform 160ms ease-out;
+  transition: transform 150ms ease-out;
   will-change: transform;
 }
 
 .donut-3d-spin {
-  animation: donut-float 8.5s ease-in-out infinite;
+  animation: donut-float 7.5s ease-in-out infinite;
 }
 
 .donut-3d-layer {
@@ -306,12 +315,18 @@ textarea {
 }
 
 .donut-3d-top {
-  filter: drop-shadow(0 22px 34px rgba(0, 0, 0, 0.42));
+  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.38));
+}
+
+.donut-slice {
+  cursor: pointer;
+  transition: opacity 180ms ease;
 }
 
 .donut-shimmer {
-  animation: donut-shimmer 4s linear infinite;
-  opacity: 0.8;
+  animation: donut-shimmer 3.4s linear infinite;
+  opacity: 0.95;
+  pointer-events: none;
 }
 
 .donut-chips {
@@ -322,38 +337,50 @@ textarea {
   display: inline-flex;
   max-width: 100%;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.5rem;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
-  background: color-mix(in srgb, var(--card) 48%, transparent);
-  padding: 0.4rem 0.75rem;
+  border: 1px solid transparent;
+  padding: 0.45rem 0.8rem;
   font-size: 0.8rem;
   line-height: 1.1;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  color: var(--ink);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease;
+}
+
+.donut-chip:hover,
+.donut-chip:focus-visible,
+.donut-chip-hot {
+  transform: translateY(-1px) scale(1.03);
+  outline: none;
 }
 
 .donut-swatch {
   position: relative;
-  height: 0.65rem;
-  width: 0.65rem;
+  height: 0.7rem;
+  width: 0.7rem;
   flex-shrink: 0;
   border-radius: 999px;
   box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.5),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.28),
-    0 1px 3px rgba(0, 0, 0, 0.3);
+    inset 0 1px 1px rgba(255, 255, 255, 0.65),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.22),
+    0 0 0 2px rgba(255, 255, 255, 0.15),
+    0 2px 8px rgba(0, 0, 0, 0.28);
 }
 
 .donut-swatch::after {
   content: "";
   position: absolute;
-  inset: 16% 16% auto auto;
-  width: 38%;
-  height: 38%;
+  inset: 14% 14% auto auto;
+  width: 40%;
+  height: 40%;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.75);
 }
 
 @keyframes donut-float {
@@ -362,7 +389,7 @@ textarea {
     translate: 0 0;
   }
   50% {
-    translate: 0 -7px;
+    translate: 0 -8px;
   }
 }
 
@@ -372,6 +399,18 @@ textarea {
   }
   100% {
     stroke-dashoffset: -440;
+  }
+}
+
+@keyframes donut-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.78;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
   }
 }
 
@@ -387,8 +426,15 @@ textarea {
   }
 
   .donut-3d-spin,
-  .donut-shimmer {
+  .donut-shimmer,
+  .donut-3d-glow {
     animation: none;
+  }
+
+  .donut-chip,
+  .donut-chip:hover,
+  .donut-chip-hot {
+    transform: none;
   }
 }
 
