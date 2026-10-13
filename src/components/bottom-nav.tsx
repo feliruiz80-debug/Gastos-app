@@ -9,12 +9,24 @@ const TABS: { id: AppTab; label: string; icon: "home" | "invest" | "settings" }[
 ];
 
 export function BottomNav({ tab, onChange }: { tab: AppTab; onChange: (tab: AppTab) => void }) {
+  const activeIndex = Math.max(
+    0,
+    TABS.findIndex((item) => item.id === tab),
+  );
+
   return (
     <nav
       className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
       aria-label="Barra de tareas"
     >
-      <div className="glass pointer-events-auto grid w-full max-w-md grid-cols-3 gap-1 rounded-full p-1.5 shadow-[0_12px_40px_rgba(26,22,19,0.18)]">
+      <div className="glass pointer-events-auto relative grid w-full max-w-md grid-cols-3 rounded-full p-1.5 shadow-[0_12px_40px_rgba(26,22,19,0.18)]">
+        <span
+          aria-hidden="true"
+          className="nav-pill pointer-events-none absolute inset-y-1.5 left-1.5 z-0 w-[calc((100%-0.75rem)/3)]"
+          style={{ transform: `translateX(${activeIndex * 100}%)` }}
+        >
+          <span key={tab} className="nav-pill-face absolute inset-0 rounded-full bg-[#2563eb] shadow-[0_8px_22px_rgba(37,99,235,0.45)]" />
+        </span>
         {TABS.map((item) => {
           const active = tab === item.id;
           return (
@@ -23,12 +35,24 @@ export function BottomNav({ tab, onChange }: { tab: AppTab; onChange: (tab: AppT
               type="button"
               aria-current={active ? "page" : undefined}
               onClick={() => onChange(item.id)}
-              className={`flex h-11 w-full min-w-0 items-center justify-center rounded-full transition-colors duration-200 ${
-                active ? "gap-1.5 bg-[#2563eb] px-2 text-white" : "text-ink hover:bg-ink/8"
+              className={`relative z-10 flex h-11 w-full min-w-0 items-center justify-center rounded-full transition-colors duration-500 ${
+                active ? "gap-1.5 px-2 text-white" : "text-ink hover:bg-ink/8"
               }`}
             >
-              <TabIcon name={item.icon} />
-              <span className={active ? "truncate text-xs font-semibold tracking-tight" : "sr-only"}>{item.label}</span>
+              <span
+                className={`inline-flex transition-transform duration-500 ease-[cubic-bezier(0.22,1.6,0.36,1)] ${
+                  active ? "scale-110" : "scale-100"
+                }`}
+              >
+                <TabIcon name={item.icon} />
+              </span>
+              <span
+                className={`overflow-hidden whitespace-nowrap text-xs font-semibold tracking-tight transition-[max-width,opacity,transform] duration-500 ease-[cubic-bezier(0.22,1.4,0.36,1)] ${
+                  active ? "max-w-24 translate-x-0 opacity-100" : "max-w-0 -translate-x-2 opacity-0"
+                }`}
+              >
+                {item.label}
+              </span>
             </button>
           );
         })}

@@ -4,6 +4,7 @@ import { formatGroupDate } from "@/lib/dates";
 import { formatMoney, formatSigned } from "@/lib/money";
 import type { CategoryTotal } from "@/lib/stats";
 import type { Account, Category, Transaction } from "@/lib/types";
+import { AnimatedMoney } from "./animated-number";
 import { DonutChart } from "./donut-chart";
 
 type FlowPanelProps = {
@@ -47,8 +48,8 @@ export function FlowPanel({
           <div>
             <p className="text-sm text-muted">{periodLabel}</p>
             <h2 className="font-display text-4xl tracking-tight">{title}</h2>
-            <p className={`mt-1 font-display text-2xl tabular-nums ${type === "income" ? "text-income" : "text-expense"}`}>
-              {formatMoney(total)}
+            <p className={`mt-1 font-display text-2xl ${type === "income" ? "text-income" : "text-expense"}`}>
+              <AnimatedMoney value={total} />
             </p>
           </div>
           <button type="button" onClick={onClose} className="rounded-full px-3 py-1 text-sm text-muted">
