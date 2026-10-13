@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { formatGroupDate } from "@/lib/dates";
 import { formatSigned } from "@/lib/money";
+import { lockBodyScroll, unlockBodyScroll } from "@/lib/body-lock";
 import type { CategoryTotal } from "@/lib/stats";
 import type { Account, Category, Transaction } from "@/lib/types";
 import { AnimatedMoney } from "./animated-number";
@@ -34,16 +36,102 @@ export function FlowPanel({
   const byCategory = new Map(categories.map((category) => [category.id, category]));
   const byAccount = new Map(accounts.map((account) => [account.id, account]));
   const sorted = [...transactions].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+  const sheetRef = useRef<HTMLElement>(null);
+  const startY = useRef<number | null>(null);
+  const startX = useRef<number | null>(null);
+  const active = useRef(false);
+  const offsetRef = useRef(0);
+  const [offsetY, setOffsetY] = useState(0);
+  const [draggingUi, setDraggingUi] = useState(false);
+
+  useEffect(() => {
+    const snapshot = lockBodyScroll();
+    return () => unlockBodyScroll(snapshot);
+  }, []);
+
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+
+    const canStart = (event: TouchEvent) => {
+      const target = event.target as HTMLElement | null;
+      const fromHandle = Boolean(target?.closest("[data-drag-handle]"));
+      return fromHandle || sheet.scrollTop <= 0;
+    };
+
+    const onStart = (event: TouchEvent) => {
+      if (event.touches.length !== 1 || !canStart(event)) return;
+      startY.current = event.touches[0].clientY;
+      startX.current = event.touches[0].clientX;
+      active.current = true;
+      setDraggingUi(true);
+    };
+
+    const onMove = (event: TouchEvent) => {
+      if (!active.current || startY.current === null || startX.current === null) return;
+      const y = event.touches[0].clientY;
+      const x = event.touches[0].clientX;
+      const dy = y - startY.current;
+      const dx = x - startX.current;
+
+      if (Math.abs(dx) > 6 && Math.abs(dx) >= Math.abs(dy)) {
+        event.preventDefault();
+        return;
+      }
+
+      if (dy > 0) {
+        event.preventDefault();
+        offsetRef.current = dy;
+        setOffsetY(dy);
+      } else if (offsetRef.current !== 0) {
+        offsetRef.current = 0;
+        setOffsetY(0);
+      }
+    };
+
+    const onEnd = () => {
+      if (!active.current) return;
+      active.current = false;
+      setDraggingUi(false);
+      const dy = offsetRef.current;
+      offsetRef.current = 0;
+      startY.current = null;
+      startX.current = null;
+      if (dy > 110) {
+        setOffsetY(0);
+        onClose();
+        return;
+      }
+      setOffsetY(0);
+    };
+
+    sheet.addEventListener("touchstart", onStart, { passive: true });
+    sheet.addEventListener("touchmove", onMove, { passive: false });
+    sheet.addEventListener("touchend", onEnd);
+    sheet.addEventListener("touchcancel", onEnd);
+    return () => {
+      sheet.removeEventListener("touchstart", onStart);
+      sheet.removeEventListener("touchmove", onMove);
+      sheet.removeEventListener("touchend", onEnd);
+      sheet.removeEventListener("touchcancel", onEnd);
+    };
+  }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-6" onMouseDown={onClose}>
+    <div className="modal-root fixed inset-0 z-40 flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-6" onMouseDown={onClose}>
       <section
+        ref={sheetRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="glass max-h-[92vh] w-full overflow-y-auto rounded-t-3xl p-5 sm:max-w-3xl sm:rounded-3xl sm:p-6"
+        className="modal-sheet glass max-h-[92vh] w-full overflow-y-auto overscroll-y-contain rounded-t-3xl p-5 sm:max-w-3xl sm:rounded-3xl sm:p-6"
+        style={{
+          transform: offsetY > 0 ? `translate3d(0, ${offsetY}px, 0)` : undefined,
+          transition: draggingUi ? "none" : "transform 220ms cubic-bezier(0.22, 1.2, 0.36, 1)",
+        }}
         onMouseDown={(event) => event.stopPropagation()}
       >
+        <div data-drag-handle className="modal-handle mx-auto mb-4 sm:hidden" aria-hidden="true" />
         <div className="mb-5 flex items-start justify-between gap-3">
           <div>
             <p className="text-sm text-muted">{periodLabel}</p>
@@ -85,7 +173,7 @@ export function FlowPanel({
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
                     style={{ backgroundColor: `${category?.color ?? "#57534e"}22`, color: category?.color ?? "#57534e" }}
                   >
-                    {(category?.name || title).slice(0, 1).toUpperCase()}
+                    {(category?.name || "M").slice(0, 1).toUpperCase()}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{label}</span>

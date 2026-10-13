@@ -53,6 +53,7 @@ html {
   min-height: 100dvh;
   overflow-x: clip;
   overscroll-behavior-x: none;
+  overscroll-behavior-y: none;
   touch-action: pan-y;
   background-color: var(--paper);
 }
@@ -63,6 +64,7 @@ body {
   min-height: 100dvh;
   overflow-x: clip;
   overscroll-behavior-x: none;
+  overscroll-behavior-y: none;
   /* El fondo llega al borde; el contenido respeta notch / Dynamic Island. */
   padding-top: env(safe-area-inset-top);
   background-color: var(--paper);
@@ -73,6 +75,26 @@ body {
   background-attachment: fixed;
   background-size: auto, auto, 18px 18px;
   color: var(--ink);
+  touch-action: pan-y;
+}
+
+.modal-root {
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+.modal-sheet {
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-handle {
+  width: 2.75rem;
+  height: 0.3rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 22%, transparent);
 }
 
 article:not(.bg-ink),
