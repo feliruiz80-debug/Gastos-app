@@ -135,6 +135,47 @@ textarea {
   transition: height 700ms cubic-bezier(0.22, 1.2, 0.36, 1);
 }
 
+.donut-3d-scene {
+  perspective: 900px;
+  perspective-origin: 50% 35%;
+}
+
+.donut-3d-shadow {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 4%;
+  height: 18%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45), transparent 70%);
+  filter: blur(6px);
+  transform: translateY(8px) scaleY(0.55);
+  pointer-events: none;
+}
+
+.donut-3d-tilt {
+  position: absolute;
+  inset: 8% 6% 18%;
+  transform: rotateX(62deg) rotateZ(-8deg);
+  transform-style: preserve-3d;
+}
+
+.donut-3d-layer {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.donut-3d-top {
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.28));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .donut-3d-tilt {
+    transform: rotateX(54deg) rotateZ(-4deg);
+  }
+}
+
 .odometer {
   --odometer-h: 1em;
   display: inline-flex;
