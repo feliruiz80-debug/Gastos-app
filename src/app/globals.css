@@ -124,40 +124,50 @@ textarea {
   }
 }
 
-.animate-money-pop {
-  animation: money-pop 520ms cubic-bezier(0.22, 1.55, 0.36, 1);
-}
-
-@keyframes money-pop {
-  0% {
-    transform: translateY(0.35em) scale(0.88);
-    opacity: 0.35;
-    filter: blur(1px);
-  }
-  55% {
-    transform: translateY(-0.08em) scale(1.06);
-    opacity: 1;
-    filter: blur(0);
-  }
-  100% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-    filter: blur(0);
-  }
-}
-
 .chart-bar {
   transition: height 700ms cubic-bezier(0.22, 1.2, 0.36, 1);
 }
 
+.odometer {
+  line-height: 1;
+}
+
+.odometer-digit {
+  display: inline-block;
+  height: 1em;
+  overflow: hidden;
+  vertical-align: baseline;
+  width: 0.62em;
+}
+
+.odometer-reel {
+  display: block;
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.16, 0.84, 0.28, 1);
+  will-change: transform;
+}
+
+.odometer-glyph {
+  display: block;
+  height: 1em;
+  line-height: 1;
+  text-align: center;
+}
+
+.odometer-static {
+  display: inline-block;
+  line-height: 1;
+  white-space: pre;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .nav-pill,
-  .chart-bar {
+  .chart-bar,
+  .odometer-reel {
     transition: none;
   }
 
-  .nav-pill-face,
-  .animate-money-pop {
+  .nav-pill-face {
     animation: none;
   }
 }
