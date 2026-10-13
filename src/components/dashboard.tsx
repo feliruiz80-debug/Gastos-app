@@ -4,6 +4,7 @@ import { currentMonth, formatGroupDate, formatMonth, formatMonthShort, shiftMont
 import { formatMoney, formatSigned } from "@/lib/money";
 import type { AccountBalance, CategoryTotal } from "@/lib/stats";
 import type { Account, Category, Transaction, TxType } from "@/lib/types";
+import { AnimatedMoney } from "./animated-number";
 
 type DashboardProps = {
   scope: "month" | "all";
@@ -175,7 +176,9 @@ export function Dashboard(props: DashboardProps) {
           <section className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <article className="rounded-3xl bg-ink p-5 text-paper">
               <p className="text-sm text-paper/70">Saldo en cuentas</p>
-              <p className="mt-3 font-display text-4xl tracking-tight tabular-nums">{formatMoney(balance)}</p>
+              <p className="mt-3 font-display text-4xl tracking-tight">
+                <AnimatedMoney value={balance} />
+              </p>
               <p className="mt-3 text-sm text-paper/70">Saldo inicial más movimientos</p>
             </article>
             <MoneyCard label="Ingresos" hint={`${periodLabel} · tocá para ver el gráfico`} value={income} tone="income" onOpen={() => onOpenFlow("income")} />
@@ -209,8 +212,8 @@ export function Dashboard(props: DashboardProps) {
                     <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.account.color }} />
                     <span className="truncate">{item.account.name}</span>
                   </p>
-                  <p className={`mt-2 font-display text-2xl tracking-tight tabular-nums ${item.balance < 0 ? "text-expense" : ""}`}>
-                    {formatMoney(item.balance)}
+                  <p className={`mt-2 font-display text-2xl tracking-tight ${item.balance < 0 ? "text-expense" : ""}`}>
+                    <AnimatedMoney value={item.balance} />
                   </p>
                 </button>
               ))}
@@ -463,13 +466,14 @@ function MoneyCard({
   signed?: boolean;
   onOpen?: () => void;
 }) {
-  const shown = signed ? `${value < 0 ? "−" : "+"}${formatMoney(Math.abs(value))}` : formatMoney(value);
   const toneClass = tone === "expense" || (tone === "balance" && value < 0) ? "text-expense" : tone === "income" || tone === "balance" ? "text-income" : "";
   const className = `glass w-full rounded-3xl p-5 text-left ${onOpen ? "transition hover:bg-card" : ""}`;
   const body = (
     <>
       <p className="text-sm text-muted">{label}</p>
-      <p className={`mt-3 font-display text-3xl tracking-tight tabular-nums ${toneClass}`}>{shown}</p>
+      <p className={`mt-3 font-display text-3xl tracking-tight ${toneClass}`}>
+        <AnimatedMoney value={value} signed={signed} />
+      </p>
       <p className="mt-3 text-sm text-muted">{hint}</p>
     </>
   );
@@ -486,7 +490,7 @@ function Bar({ value, max, className, label }: { value: number; max: number; cla
   return (
     <span
       title={`${label}: ${formatMoney(value)}`}
-      className={`block w-3 rounded-t-md ${className}`}
+      className={`chart-bar block w-3 rounded-t-md ${className}`}
       style={{ height: `${height}%` }}
     />
   );

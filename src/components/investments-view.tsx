@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { positionValue, preferLocalSymbol, type MarketSnapshot } from "@/lib/market";
 import { amountToInput, formatMoney, parseAmount, parseBudget, parseUnits } from "@/lib/money";
 import type { Investment, InvestmentKind } from "@/lib/types";
+import { AnimatedMoney } from "./animated-number";
 import { DonutChart } from "./donut-chart";
 
 const KINDS: { id: InvestmentKind; label: string; color: string }[] = [
@@ -245,17 +246,20 @@ export function InvestmentsView({ investments, onSave, onDelete, onApplyQuotes }
       <section className="mt-6 grid gap-3 sm:grid-cols-3">
         <article className="glass rounded-3xl p-5">
           <p className="text-sm text-muted">Invertido</p>
-          <p className="mt-2 font-display text-3xl tabular-nums">{formatMoney(investedTotal)}</p>
+          <p className="mt-2 font-display text-3xl">
+            <AnimatedMoney value={investedTotal} />
+          </p>
         </article>
         <article className="glass rounded-3xl p-5">
           <p className="text-sm text-muted">Valor actual</p>
-          <p className="mt-2 font-display text-3xl tabular-nums">{formatMoney(currentTotal)}</p>
+          <p className="mt-2 font-display text-3xl">
+            <AnimatedMoney value={currentTotal} />
+          </p>
         </article>
         <article className="glass rounded-3xl p-5">
           <p className="text-sm text-muted">Resultado</p>
-          <p className={`mt-2 font-display text-3xl tabular-nums ${gain >= 0 ? "text-income" : "text-expense"}`}>
-            {gain < 0 ? "−" : "+"}
-            {formatMoney(Math.abs(gain))}
+          <p className={`mt-2 font-display text-3xl ${gain >= 0 ? "text-income" : "text-expense"}`}>
+            <AnimatedMoney value={gain} signed />
           </p>
         </article>
       </section>
