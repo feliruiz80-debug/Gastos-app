@@ -136,28 +136,57 @@ textarea {
 }
 
 .donut-3d-scene {
-  perspective: 900px;
-  perspective-origin: 50% 35%;
+  perspective: 1100px;
+  perspective-origin: 50% 28%;
 }
 
 .donut-3d-shadow {
   position: absolute;
-  left: 12%;
-  right: 12%;
-  bottom: 4%;
-  height: 18%;
+  left: 10%;
+  right: 10%;
+  bottom: 2%;
+  height: 22%;
   border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45), transparent 70%);
-  filter: blur(6px);
-  transform: translateY(8px) scaleY(0.55);
+  background:
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0.55), transparent 68%),
+    radial-gradient(ellipse at 45% 40%, rgba(0, 0, 0, 0.25), transparent 55%);
+  filter: blur(8px);
+  transform: translateY(10px) scaleY(0.5);
+  pointer-events: none;
+}
+
+.donut-3d-glow {
+  position: absolute;
+  inset: 18% 16% 28%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--income) 18%, transparent), transparent 70%);
+  filter: blur(18px);
+  opacity: 0.75;
   pointer-events: none;
 }
 
 .donut-3d-tilt {
   position: absolute;
-  inset: 8% 6% 18%;
-  transform: rotateX(62deg) rotateZ(-8deg);
+  inset: 6% 5% 20%;
+  transform: rotateX(64deg) rotateZ(-10deg);
   transform-style: preserve-3d;
+}
+
+.donut-3d-spin {
+  animation: donut-float 7.5s ease-in-out infinite;
+}
+
+.donut-3d-core {
+  position: absolute;
+  left: 28%;
+  right: 28%;
+  top: 28%;
+  bottom: 28%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.42));
+  transform: translateZ(-2px);
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
 }
 
 .donut-3d-layer {
@@ -167,12 +196,48 @@ textarea {
 }
 
 .donut-3d-top {
-  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.28));
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.32));
+}
+
+.donut-swatch {
+  position: relative;
+  height: 0.7rem;
+  width: 0.7rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.45),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.25),
+    0 1px 3px rgba(0, 0, 0, 0.28);
+}
+
+.donut-swatch::after {
+  content: "";
+  position: absolute;
+  inset: 18% 18% auto auto;
+  width: 35%;
+  height: 35%;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+@keyframes donut-float {
+  0%,
+  100% {
+    transform: rotateX(64deg) rotateZ(-10deg) translateY(0);
+  }
+  50% {
+    transform: rotateX(61deg) rotateZ(-6deg) translateY(-5px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .donut-3d-tilt {
-    transform: rotateX(54deg) rotateZ(-4deg);
+    transform: rotateX(58deg) rotateZ(-6deg);
+  }
+
+  .donut-3d-spin {
+    animation: none;
   }
 }
 
