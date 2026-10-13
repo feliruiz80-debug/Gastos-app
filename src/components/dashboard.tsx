@@ -107,23 +107,32 @@ export function Dashboard(props: DashboardProps) {
   return (
     <div className="mx-auto min-h-screen max-w-6xl px-4 py-6 pb-32 sm:px-6 sm:pt-10 sm:pb-32">
       <header className="space-y-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="font-display text-4xl tracking-tight sm:text-5xl">Money Manager</h1>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => onAdd("income")} className="rounded-full bg-income-solid px-4 py-2.5 text-sm font-semibold text-white">
-              Nuevo ingreso
+        <div className="flex flex-col items-center gap-5">
+          <h1 className="text-center font-display text-4xl tracking-tight sm:text-5xl">Money Manager</h1>
+          <div className="flex items-stretch justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => onAdd("income")}
+              className="flex h-28 w-28 flex-col items-center justify-center gap-1 rounded-3xl bg-income-solid text-white shadow-[0_10px_28px_rgba(21,122,69,0.35)] transition hover:brightness-110 active:scale-[0.98] sm:h-32 sm:w-32"
+            >
+              <span className="text-5xl font-light leading-none sm:text-6xl" aria-hidden="true">
+                +
+              </span>
+              <span className="text-[10px] font-medium tracking-wide lowercase opacity-90 sm:text-[11px]">nuevo ingreso</span>
             </button>
-            <button type="button" onClick={() => onAdd("expense")} className="rounded-full bg-expense-solid px-4 py-2.5 text-sm font-semibold text-white">
-              Nuevo gasto
-            </button>
-            <button type="button" onClick={() => onAdd("transfer")} className="glass rounded-full px-4 py-2.5 text-sm font-semibold">
-              Pasar
+            <button
+              type="button"
+              onClick={() => onAdd("expense")}
+              className="flex h-28 w-28 flex-col items-center justify-center gap-1 rounded-3xl bg-expense-solid text-white shadow-[0_10px_28px_rgba(154,52,18,0.35)] transition hover:brightness-110 active:scale-[0.98] sm:h-32 sm:w-32"
+            >
+              <span className="text-5xl font-light leading-none sm:text-6xl" aria-hidden="true">
+                −
+              </span>
+              <span className="text-[10px] font-medium tracking-wide lowercase opacity-90 sm:text-[11px]">nuevo gasto</span>
             </button>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-2">
           {scope === "month" ? (
             <div className="inline-flex items-center rounded-full border border-line bg-card">
               <button type="button" className="px-3 py-2 text-lg" aria-label="Mes anterior" onClick={() => onMonth(shiftMonth(month, -1))}>
@@ -158,13 +167,29 @@ export function Dashboard(props: DashboardProps) {
           <p className="mx-auto mt-3 max-w-md text-muted">
             Anotá el sueldo, el super o un pago entre cuentas. El saldo y los presupuestos se arman solos.
           </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <button type="button" onClick={() => onAdd("income")} className="rounded-full bg-income-solid px-4 py-2.5 text-sm font-semibold text-white">
-              Nuevo ingreso
-            </button>
-            <button type="button" onClick={() => onAdd("expense")} className="rounded-full bg-expense-solid px-4 py-2.5 text-sm font-semibold text-white">
-              Nuevo gasto
-            </button>
+          <div className="mt-6 flex flex-col items-center gap-4">
+            <div className="flex items-stretch justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => onAdd("income")}
+                className="flex h-28 w-28 flex-col items-center justify-center gap-1 rounded-3xl bg-income-solid text-white shadow-[0_10px_28px_rgba(21,122,69,0.35)]"
+              >
+                <span className="text-5xl font-light leading-none" aria-hidden="true">
+                  +
+                </span>
+                <span className="text-[10px] font-medium tracking-wide lowercase opacity-90">nuevo ingreso</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onAdd("expense")}
+                className="flex h-28 w-28 flex-col items-center justify-center gap-1 rounded-3xl bg-expense-solid text-white shadow-[0_10px_28px_rgba(154,52,18,0.35)]"
+              >
+                <span className="text-5xl font-light leading-none" aria-hidden="true">
+                  −
+                </span>
+                <span className="text-[10px] font-medium tracking-wide lowercase opacity-90">nuevo gasto</span>
+              </button>
+            </div>
             <button type="button" onClick={onSync} className="rounded-full border border-line px-4 py-2.5 text-sm font-medium">
               {syncing ? "Leyendo la hoja…" : "Traer de la hoja"}
             </button>
