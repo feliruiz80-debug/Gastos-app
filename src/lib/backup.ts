@@ -1,6 +1,16 @@
 import { defaultAccounts, defaultCategories } from "./defaults";
 import { isValidISODate } from "./dates";
-import type { Account, AppData, BackupFile, Category, Investment, InvestmentKind, Transaction, TxType } from "./types";
+import type {
+  Account,
+  AppData,
+  BackupFile,
+  Category,
+  FixedExpense,
+  Investment,
+  InvestmentKind,
+  Transaction,
+  TxType,
+} from "./types";
 
 const MAX_NAME = 60;
 const MAX_NOTE = 140;
@@ -72,6 +82,10 @@ function cleanTransaction(value: unknown): Transaction | null {
     typeof transaction.createdAt === "string" && transaction.createdAt.length > 0
       ? transaction.createdAt
       : new Date(`${transaction.date}T12:00:00`).toISOString();
+  const fixedExpenseId =
+    typeof transaction.fixedExpenseId === "string" && transaction.fixedExpenseId.trim().length > 0
+      ? transaction.fixedExpenseId.trim()
+      : undefined;
   return {
     id: transaction.id,
     type: transaction.type,
@@ -82,6 +96,37 @@ function cleanTransaction(value: unknown): Transaction | null {
     note: transaction.note.trim(),
     date: transaction.date,
     createdAt,
+    fixedExpenseId: transaction.type === "expense" ? fixedExpenseId : undefined,
+  };
+}
+
+function cleanFixedExpense(value: unknown): FixedExpense | null {
+  if (!value || typeof value !== "object") return null;
+  const item = value as Partial<FixedExpense>;
+  if (typeof item.id !== "string" || item.id.trim().length === 0) return null;
+  if (typeof item.name !== "string") return null;
+  const name = item.name.trim();
+  if (!name || name.length > MAX_NAME) return null;
+  const amount = cleanMoney(item.amount, false);
+  if (amount === null || amount <= 0) return null;
+  if (typeof item.categoryId !== "string" || item.categoryId.length === 0) return null;
+  if (typeof item.accountId !== "string" || item.accountId.length === 0) return null;
+  const day =
+    typeof item.dayOfMonth === "number" && Number.isFinite(item.dayOfMonth)
+      ? Math.floor(item.dayOfMonth)
+      : NaN;
+  if (!Number.isFinite(day) || day < 1 || day > 28) return null;
+  const note = typeof item.note === "string" ? item.note.trim() : "";
+  if (note.length > MAX_NOTE) return null;
+  return {
+    id: item.id,
+    name,
+    amount,
+    categoryId: item.categoryId,
+    accountId: item.accountId,
+    dayOfMonth: day,
+    note,
+    active: item.active !== false,
   };
 }
 
@@ -142,6 +187,7 @@ export function sanitizeData(input: unknown): AppData | null {
     accounts?: unknown;
     transactions?: unknown;
     investments?: unknown;
+    fixedExpenses?: unknown;
   };
   if (!Array.isArray(record.categories) || !Array.isArray(record.transactions)) return null;
 
@@ -181,11 +227,26 @@ export function sanitizeData(input: unknown): AppData | null {
       .filter((investment): investment is Investment => investment !== null),
   );
 
+  const knownCategories = new Set(safeCategories.map((category) => category.id));
+  const fallbackCategory =
+    safeCategories.find((category) => category.type === "expense")?.id ?? safeCategories[0]?.id ?? "";
+
+  const fixedExpenses = uniqueById(
+    (Array.isArray(record.fixedExpenses) ? record.fixedExpenses : [])
+      .map(cleanFixedExpense)
+      .filter((item): item is FixedExpense => item !== null),
+  ).map((item) => ({
+    ...item,
+    accountId: knownAccounts.has(item.accountId) ? item.accountId : fallbackAccount,
+    categoryId: knownCategories.has(item.categoryId) ? item.categoryId : fallbackCategory,
+  }));
+
   return {
     categories: safeCategories,
     accounts: safeAccounts,
     transactions,
     investments,
+    fixedExpenses,
   };
 }
 
@@ -197,5 +258,6 @@ export function toBackup(data: AppData, now = new Date()): BackupFile {
     accounts: data.accounts,
     transactions: data.transactions,
     investments: data.investments,
+    fixedExpenses: data.fixedExpenses ?? [],
   };
 }

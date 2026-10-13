@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   currentMonth,
+  dateInMonth,
   formatGroupDate,
   formatMonth,
   isValidISODate,
@@ -32,5 +33,11 @@ describe("fechas", () => {
     assert.equal(formatGroupDate("2026-10-09", "2026-10-10"), "Ayer");
     assert.match(formatMonth("2026-10").toLowerCase(), /oct/);
     assert.match(formatMonth("2026-10"), /2026/);
+  });
+
+  it("arma la fecha de un gasto fijo dentro del mes", () => {
+    assert.equal(dateInMonth("2026-10", 5), "2026-10-05");
+    assert.equal(dateInMonth("2026-02", 28), "2026-02-28");
+    assert.equal(dateInMonth("2026-02", 31), "2026-02-28");
   });
 });
