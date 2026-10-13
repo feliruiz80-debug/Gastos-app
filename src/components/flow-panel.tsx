@@ -1,7 +1,7 @@
 "use client";
 
 import { formatGroupDate } from "@/lib/dates";
-import { formatMoney, formatSigned } from "@/lib/money";
+import { formatSigned } from "@/lib/money";
 import type { CategoryTotal } from "@/lib/stats";
 import type { Account, Category, Transaction } from "@/lib/types";
 import { AnimatedMoney } from "./animated-number";
