@@ -95,8 +95,8 @@ function prepareSlices(slices: Slice[]): { total: number; prepared: PreparedSlic
   return { total, prepared };
 }
 
-const DEPTH_LAYERS = 34;
-const EXTRUDE = 54;
+const DEPTH_LAYERS = 28;
+const EXTRUDE = 34;
 
 export function DonutChart({ slices, center }: { slices: Slice[]; center: string }) {
   const uid = useId().replace(/:/g, "");
@@ -121,7 +121,7 @@ export function DonutChart({ slices, center }: { slices: Slice[]; center: string
       const rect = node.getBoundingClientRect();
       const px = (event.clientX - rect.left) / rect.width - 0.5;
       const py = (event.clientY - rect.top) / rect.height - 0.5;
-      setTilt({ x: py * -8, y: px * 10 });
+      setTilt({ x: py * -6, y: px * 8 });
     };
     const onLeave = () => setTilt({ x: 0, y: 0 });
 
@@ -147,13 +147,13 @@ export function DonutChart({ slices, center }: { slices: Slice[]; center: string
           role="img"
           aria-label={label || "Sin datos"}
           style={{
-            transform: `rotateX(${74 + tilt.x}deg) rotateZ(${-16 + tilt.y}deg)`,
+            transform: `rotateX(${40 + tilt.x}deg) rotateZ(${-6 + tilt.y}deg)`,
           }}
         >
           {/* Cara inferior (más oscura) para que se note el cuerpo sólido */}
           <div
             className="donut-3d-layer"
-            style={{ transform: `translate3d(0, ${EXTRUDE * 0.92}px, -2px)`, zIndex: 0 }}
+            style={{ transform: `translate3d(0, ${EXTRUDE * 0.55}px, ${-EXTRUDE * 0.35}px)`, zIndex: 0 }}
           >
             <svg viewBox="0 0 160 160" className="h-full w-full" aria-hidden="true">
               {total <= 0 ? (
@@ -211,14 +211,15 @@ export function DonutChart({ slices, center }: { slices: Slice[]; center: string
           {Array.from({ length: DEPTH_LAYERS }, (_, index) => {
             const fromBottom = DEPTH_LAYERS - 1 - index;
             const t = index / Math.max(DEPTH_LAYERS - 1, 1);
-            const dim = 26 + t * 58;
-            const y = (fromBottom / DEPTH_LAYERS) * (EXTRUDE * 0.88);
+            const dim = 30 + t * 56;
+            const y = (fromBottom / DEPTH_LAYERS) * (EXTRUDE * 0.5);
+            const z = (fromBottom / DEPTH_LAYERS) * -12;
             return (
               <div
                 key={fromBottom}
                 className="donut-3d-layer"
                 style={{
-                  transform: `translate3d(0, ${y}px, ${fromBottom * -0.2}px)`,
+                  transform: `translate3d(0, ${y}px, ${z}px)`,
                   zIndex: index + 2,
                 }}
               >
@@ -337,7 +338,7 @@ export function DonutChart({ slices, center }: { slices: Slice[]; center: string
           </div>
         </div>
 
-        <div className="pointer-events-none absolute inset-x-0 top-[34%] z-20 flex -translate-y-1/2 justify-center px-12">
+        <div className="pointer-events-none absolute inset-x-0 top-[46%] z-20 flex -translate-y-1/2 justify-center px-12">
           <div className="donut-3d-chip px-4 py-2 text-center">
             <p className="font-display text-base leading-tight tracking-tight sm:text-lg">{center}</p>
           </div>
