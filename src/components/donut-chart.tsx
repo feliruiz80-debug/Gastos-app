@@ -11,19 +11,16 @@ export type DonutSlice = {
   color: string;
 };
 
-export type DayLine = {
+export type SummaryLine = {
   id: string;
   label: string;
   amount: number;
 };
 
-export type SliceDaySummary = {
-  /** Monto del día para esta categoría. */
+/** Resumen del mes (o período) por categoría. */
+export type SlicePeriodSummary = {
   amount: number;
-  /** Etiqueta de fecha, p. ej. "Hoy" o "Ayer". */
-  dateLabel: string;
-  /** Líneas del resumen (notas / movimientos del día). */
-  lines: DayLine[];
+  lines: SummaryLine[];
 };
 
 type PreparedSlice = DonutSlice & {
@@ -35,9 +32,9 @@ type PreparedSlice = DonutSlice & {
 
 type DonutChartProps = {
   slices: DonutSlice[];
-  /** Resumen del día por id de slice (categoría). Si falta, el popup solo muestra el monto del período. */
-  daySummaries?: Record<string, SliceDaySummary>;
-  /** Etiqueta del período total, p. ej. "Este mes". */
+  /** Movimientos del período por id de slice (categoría). */
+  periodSummaries?: Record<string, SlicePeriodSummary>;
+  /** Etiqueta del período, p. ej. "Este mes". */
   periodLabel?: string;
 };
 
@@ -98,9 +95,9 @@ function prepareSlices(slices: DonutSlice[]): { total: number; prepared: Prepare
   const total = slices.reduce((sum, slice) => sum + slice.amount, 0);
   if (total <= 0) return { total: 0, prepared: [] };
 
-  const gap = slices.length > 1 ? 2.8 : 0;
+  const gap = slices.length > 1 ? 2.2 : 0;
   const usable = 360 - gap * slices.length;
-  let cursor = -28;
+  let cursor = -30;
   const prepared: PreparedSlice[] = [];
 
   for (const slice of slices) {
@@ -120,21 +117,23 @@ function prepareSlices(slices: DonutSlice[]): { total: number; prepared: Prepare
   return { total, prepared };
 }
 
-const DEPTH_LAYERS = 22;
-const EXTRUDE = 34;
+/** Anillo grueso tipo torus clay 3D (como la referencia). */
+const DEPTH_LAYERS = 26;
+const EXTRUDE = 42;
+const R_INNER = 28;
+const R_OUTER = 76;
 
-export function DonutChart({ slices, daySummaries, periodLabel = "Período" }: DonutChartProps) {
+export function DonutChart({ slices, periodSummaries, periodLabel = "Este mes" }: DonutChartProps) {
   const uid = useId().replace(/:/g, "");
   const [ready, setReady] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { total, prepared } = useMemo(() => prepareSlices(slices), [slices]);
-  const rInner = 34;
-  const rOuter = 74;
   const aria = prepared.map((s) => `${s.name} ${s.percent}%`).join(", ") || "Sin datos";
   const selected = prepared.find((slice) => slice.id === selectedId) ?? null;
-  const selectedDay = selectedId ? daySummaries?.[selectedId] : undefined;
-  const legendDots = prepared.slice(0, 3);
+  const selectedPeriod = selectedId ? periodSummaries?.[selectedId] : undefined;
+  const summaryAmount = selectedPeriod?.amount ?? selected?.amount ?? 0;
+  const summaryLines = selectedPeriod?.lines ?? [];
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setReady(true));
@@ -157,231 +156,221 @@ export function DonutChart({ slices, daySummaries, periodLabel = "Período" }: D
 
   return (
     <div className="donut-pro flex flex-col items-center gap-4">
-      <div className={`donut-clay ${ready ? "donut-clay-ready" : ""}`}>
-        <div className="donut-clay-rail" aria-hidden="true" />
-        <div className="donut-clay-panel">
-          <div className={`donut-3d-scene relative mx-auto h-60 w-60 touch-manipulation sm:h-72 sm:w-72 ${ready ? "donut-3d-ready" : ""}`}>
-            <div className="donut-3d-shadow" aria-hidden="true" />
-            <div className="donut-3d-glow" aria-hidden="true" />
+      <div className={`donut-3d-scene relative mx-auto h-64 w-64 touch-manipulation sm:h-80 sm:w-80 ${ready ? "donut-3d-ready" : ""}`}>
+        <div className="donut-3d-shadow" aria-hidden="true" />
+        <div className="donut-3d-glow" aria-hidden="true" />
 
-            <div
-              className="donut-3d-tilt"
-              role="img"
-              aria-label={aria}
-              style={{ transform: "rotateX(40deg) rotateZ(-8deg)" }}
-            >
+        <div
+          className="donut-3d-tilt"
+          role="img"
+          aria-label={aria}
+          style={{ transform: "rotateX(48deg) rotateZ(-10deg)" }}
+        >
+          <div
+            className="donut-3d-layer"
+            style={{ transform: `translate3d(0, ${EXTRUDE * 0.52}px, ${-EXTRUDE * 0.3}px)`, zIndex: 0 }}
+          >
+            <svg viewBox="0 0 160 160" className="h-full w-full" aria-hidden="true">
+              {total <= 0 ? (
+                <circle
+                  cx="80"
+                  cy="80"
+                  r={(R_INNER + R_OUTER) / 2}
+                  fill="none"
+                  stroke={shade("#6b5ce7", 38, "#000")}
+                  strokeWidth={R_OUTER - R_INNER}
+                />
+              ) : (
+                prepared.map((slice) => (
+                  <path
+                    key={`bottom-${slice.id}`}
+                    d={donutSegmentPath(80, 80, R_INNER, R_OUTER, slice.start, slice.end)}
+                    fill={shade(slice.color, 18, "#000")}
+                  />
+                ))
+              )}
+            </svg>
+          </div>
+
+          <div className="donut-3d-layer donut-3d-walls" style={{ zIndex: 1 }}>
+            <svg viewBox="0 0 160 160" className="h-full w-full overflow-visible" aria-hidden="true">
+              <defs>
+                {prepared.map((slice) => {
+                  const lit = 0.5 + 0.5 * Math.cos(((slice.mid - 195) * Math.PI) / 180);
+                  return (
+                    <linearGradient key={`w-${slice.id}`} id={`wall-${uid}-${slice.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor={shade(slice.color, 46 + lit * 20, "#000")} />
+                      <stop offset="100%" stopColor={shade(slice.color, 14, "#000")} />
+                    </linearGradient>
+                  );
+                })}
+              </defs>
+              {prepared.map((slice) => (
+                <g key={`side-${slice.id}`}>
+                  <path d={sideWallPath(80, 80, R_OUTER, slice.start, slice.end, EXTRUDE)} fill={`url(#wall-${uid}-${slice.id})`} />
+                  <path d={sideWallPath(80, 80, R_INNER, slice.start, slice.end, EXTRUDE)} fill={shade(slice.color, 8, "#000")} />
+                </g>
+              ))}
+              {total <= 0 ? (
+                <>
+                  <path d={sideWallPath(80, 80, R_OUTER, 0, 359.9, EXTRUDE)} fill={shade("#6b5ce7", 36)} />
+                  <path d={sideWallPath(80, 80, R_INNER, 0, 359.9, EXTRUDE)} fill={shade("#6b5ce7", 20)} />
+                </>
+              ) : null}
+            </svg>
+          </div>
+
+          {Array.from({ length: DEPTH_LAYERS }, (_, index) => {
+            const fromBottom = DEPTH_LAYERS - 1 - index;
+            const t = index / Math.max(DEPTH_LAYERS - 1, 1);
+            const dim = 32 + t * 54;
+            const y = (fromBottom / DEPTH_LAYERS) * (EXTRUDE * 0.5);
+            const z = (fromBottom / DEPTH_LAYERS) * -12;
+            return (
               <div
+                key={fromBottom}
                 className="donut-3d-layer"
-                style={{ transform: `translate3d(0, ${EXTRUDE * 0.5}px, ${-EXTRUDE * 0.28}px)`, zIndex: 0 }}
+                style={{ transform: `translate3d(0, ${y}px, ${z}px)`, zIndex: index + 2 }}
               >
                 <svg viewBox="0 0 160 160" className="h-full w-full" aria-hidden="true">
                   {total <= 0 ? (
                     <circle
                       cx="80"
                       cy="80"
-                      r={(rInner + rOuter) / 2}
+                      r={(R_INNER + R_OUTER) / 2}
                       fill="none"
-                      stroke={shade("#6b5ce7", 40, "#000")}
-                      strokeWidth={rOuter - rInner}
+                      stroke={shade("#6b5ce7", Math.min(dim, 78))}
+                      strokeWidth={R_OUTER - R_INNER}
                     />
                   ) : (
                     prepared.map((slice) => (
                       <path
-                        key={`bottom-${slice.id}`}
-                        d={donutSegmentPath(80, 80, rInner, rOuter, slice.start, slice.end)}
-                        fill={shade(slice.color, 20, "#000")}
+                        key={slice.id}
+                        d={donutSegmentPath(80, 80, R_INNER, R_OUTER, slice.start, slice.end)}
+                        fill={shade(slice.color, dim)}
                       />
                     ))
                   )}
                 </svg>
               </div>
+            );
+          })}
 
-              <div className="donut-3d-layer donut-3d-walls" style={{ zIndex: 1 }}>
-                <svg viewBox="0 0 160 160" className="h-full w-full overflow-visible" aria-hidden="true">
-                  <defs>
-                    {prepared.map((slice) => {
-                      const lit = 0.5 + 0.5 * Math.cos(((slice.mid - 195) * Math.PI) / 180);
-                      return (
-                        <linearGradient key={`w-${slice.id}`} id={`wall-${uid}-${slice.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" stopColor={shade(slice.color, 48 + lit * 18, "#000")} />
-                          <stop offset="100%" stopColor={shade(slice.color, 16, "#000")} />
-                        </linearGradient>
-                      );
-                    })}
-                  </defs>
-                  {prepared.map((slice) => (
-                    <g key={`side-${slice.id}`}>
-                      <path d={sideWallPath(80, 80, rOuter, slice.start, slice.end, EXTRUDE)} fill={`url(#wall-${uid}-${slice.id})`} />
-                      <path d={sideWallPath(80, 80, rInner, slice.start, slice.end, EXTRUDE)} fill={shade(slice.color, 10, "#000")} />
-                    </g>
-                  ))}
-                  {total <= 0 ? (
-                    <>
-                      <path d={sideWallPath(80, 80, rOuter, 0, 359.9, EXTRUDE)} fill={shade("#6b5ce7", 38)} />
-                      <path d={sideWallPath(80, 80, rInner, 0, 359.9, EXTRUDE)} fill={shade("#6b5ce7", 22)} />
-                    </>
-                  ) : null}
-                </svg>
-              </div>
+          <div className="donut-3d-layer donut-3d-top" style={{ transform: "translate3d(0, 0, 5px)", zIndex: DEPTH_LAYERS + 10 }}>
+            <svg viewBox="0 0 160 160" className="h-full w-full" aria-hidden="true">
+              <defs>
+                {prepared.map((slice) => {
+                  const lit = 0.5 + 0.5 * Math.cos(((slice.mid - 205) * Math.PI) / 180);
+                  const hot = activeId === slice.id || selectedId === slice.id;
+                  return (
+                    <radialGradient
+                      key={slice.id}
+                      id={`top-${uid}-${slice.id}`}
+                      cx={`${32 + lit * 28}%`}
+                      cy={`${18 + (1 - lit) * 12}%`}
+                      r="90%"
+                    >
+                      <stop offset="0%" stopColor={shade(slice.color, hot ? 22 : 32 + lit * 36, "#ffffff")} />
+                      <stop offset="38%" stopColor={shade(slice.color, 72, "#ffffff")} />
+                      <stop offset="70%" stopColor={slice.color} />
+                      <stop offset="100%" stopColor={shade(slice.color, 58 + (1 - lit) * 22, "#000000")} />
+                    </radialGradient>
+                  );
+                })}
+                <linearGradient id={`bevel-out-${uid}`} x1="8%" y1="0%" x2="92%" y2="100%">
+                  <stop offset="0%" stopColor="rgba(255,255,255,0.85)" />
+                  <stop offset="40%" stopColor="rgba(255,255,255,0.1)" />
+                  <stop offset="100%" stopColor="rgba(0,0,0,0.4)" />
+                </linearGradient>
+                <linearGradient id={`bevel-in-${uid}`} x1="16%" y1="6%" x2="84%" y2="94%">
+                  <stop offset="0%" stopColor="rgba(255,255,255,0.48)" />
+                  <stop offset="100%" stopColor="rgba(0,0,0,0.36)" />
+                </linearGradient>
+                <linearGradient id={`spec-${uid}`} x1="2%" y1="0%" x2="70%" y2="86%">
+                  <stop offset="0%" stopColor="rgba(255,255,255,0.78)" />
+                  <stop offset="18%" stopColor="rgba(255,255,255,0.28)" />
+                  <stop offset="45%" stopColor="rgba(255,255,255,0.05)" />
+                  <stop offset="68%" stopColor="rgba(255,255,255,0)" />
+                </linearGradient>
+              </defs>
 
-              {Array.from({ length: DEPTH_LAYERS }, (_, index) => {
-                const fromBottom = DEPTH_LAYERS - 1 - index;
-                const t = index / Math.max(DEPTH_LAYERS - 1, 1);
-                const dim = 34 + t * 52;
-                const y = (fromBottom / DEPTH_LAYERS) * (EXTRUDE * 0.48);
-                const z = (fromBottom / DEPTH_LAYERS) * -10;
-                return (
-                  <div
-                    key={fromBottom}
-                    className="donut-3d-layer"
-                    style={{ transform: `translate3d(0, ${y}px, ${z}px)`, zIndex: index + 2 }}
-                  >
-                    <svg viewBox="0 0 160 160" className="h-full w-full" aria-hidden="true">
-                      {total <= 0 ? (
-                        <circle
-                          cx="80"
-                          cy="80"
-                          r={(rInner + rOuter) / 2}
-                          fill="none"
-                          stroke={shade("#6b5ce7", Math.min(dim, 78))}
-                          strokeWidth={rOuter - rInner}
-                        />
-                      ) : (
-                        prepared.map((slice) => (
-                          <path
-                            key={slice.id}
-                            d={donutSegmentPath(80, 80, rInner, rOuter, slice.start, slice.end)}
-                            fill={shade(slice.color, dim)}
-                          />
-                        ))
-                      )}
-                    </svg>
-                  </div>
-                );
-              })}
-
-              <div className="donut-3d-layer donut-3d-top" style={{ transform: "translate3d(0, 0, 4px)", zIndex: DEPTH_LAYERS + 10 }}>
-                <svg viewBox="0 0 160 160" className="h-full w-full" aria-hidden="true">
-                  <defs>
-                    {prepared.map((slice) => {
-                      const lit = 0.5 + 0.5 * Math.cos(((slice.mid - 205) * Math.PI) / 180);
-                      const hot = activeId === slice.id || selectedId === slice.id;
-                      return (
-                        <radialGradient
-                          key={slice.id}
-                          id={`top-${uid}-${slice.id}`}
-                          cx={`${34 + lit * 26}%`}
-                          cy={`${20 + (1 - lit) * 14}%`}
-                          r="88%"
-                        >
-                          <stop offset="0%" stopColor={shade(slice.color, hot ? 28 : 38 + lit * 34, "#ffffff")} />
-                          <stop offset="42%" stopColor={shade(slice.color, 78, "#ffffff")} />
-                          <stop offset="72%" stopColor={slice.color} />
-                          <stop offset="100%" stopColor={shade(slice.color, 62 + (1 - lit) * 20, "#000000")} />
-                        </radialGradient>
-                      );
-                    })}
-                    <linearGradient id={`bevel-out-${uid}`} x1="10%" y1="0%" x2="90%" y2="100%">
-                      <stop offset="0%" stopColor="rgba(255,255,255,0.78)" />
-                      <stop offset="42%" stopColor="rgba(255,255,255,0.08)" />
-                      <stop offset="100%" stopColor="rgba(0,0,0,0.38)" />
-                    </linearGradient>
-                    <linearGradient id={`bevel-in-${uid}`} x1="18%" y1="8%" x2="82%" y2="92%">
-                      <stop offset="0%" stopColor="rgba(255,255,255,0.42)" />
-                      <stop offset="100%" stopColor="rgba(0,0,0,0.34)" />
-                    </linearGradient>
-                    <linearGradient id={`spec-${uid}`} x1="4%" y1="0%" x2="72%" y2="88%">
-                      <stop offset="0%" stopColor="rgba(255,255,255,0.72)" />
-                      <stop offset="22%" stopColor="rgba(255,255,255,0.22)" />
-                      <stop offset="48%" stopColor="rgba(255,255,255,0.04)" />
-                      <stop offset="70%" stopColor="rgba(255,255,255,0)" />
-                    </linearGradient>
-                  </defs>
-
-                  {total <= 0 ? (
-                    <circle
-                      cx="80"
-                      cy="80"
-                      r={(rInner + rOuter) / 2}
-                      fill="none"
-                      stroke="#6b5ce7"
-                      strokeWidth={rOuter - rInner}
+              {total <= 0 ? (
+                <circle
+                  cx="80"
+                  cy="80"
+                  r={(R_INNER + R_OUTER) / 2}
+                  fill="none"
+                  stroke="#6b5ce7"
+                  strokeWidth={R_OUTER - R_INNER}
+                />
+              ) : (
+                prepared.map((slice) => {
+                  const hot =
+                    (activeId === null && selectedId === null) ||
+                    activeId === slice.id ||
+                    selectedId === slice.id;
+                  return (
+                    <path
+                      key={slice.id}
+                      className="donut-slice"
+                      d={donutSegmentPath(80, 80, R_INNER, R_OUTER, slice.start, slice.end)}
+                      fill={`url(#top-${uid}-${slice.id})`}
+                      opacity={hot ? 1 : 0.4}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${slice.name}, ${slice.percent}%, ${formatMoney(slice.amount)}. Tocá para ver el resumen del mes.`}
+                      aria-pressed={selectedId === slice.id}
+                      onPointerEnter={() => setActiveId(slice.id)}
+                      onPointerLeave={() => setActiveId(null)}
+                      onClick={() => selectSlice(slice.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          selectSlice(slice.id);
+                        }
+                      }}
                     />
-                  ) : (
-                    prepared.map((slice) => {
-                      const hot = activeId === null && selectedId === null || activeId === slice.id || selectedId === slice.id;
-                      return (
-                        <path
-                          key={slice.id}
-                          className="donut-slice"
-                          d={donutSegmentPath(80, 80, rInner, rOuter, slice.start, slice.end)}
-                          fill={`url(#top-${uid}-${slice.id})`}
-                          opacity={hot ? 1 : 0.42}
-                          role="button"
-                          tabIndex={0}
-                          aria-label={`${slice.name}, ${slice.percent}%, ${formatMoney(slice.amount)}. Tocá para ver el resumen del día.`}
-                          aria-pressed={selectedId === slice.id}
-                          onPointerEnter={() => setActiveId(slice.id)}
-                          onPointerLeave={() => setActiveId(null)}
-                          onClick={() => selectSlice(slice.id)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === " ") {
-                              event.preventDefault();
-                              selectSlice(slice.id);
-                            }
-                          }}
-                        />
-                      );
-                    })
-                  )}
+                  );
+                })
+              )}
 
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r={rOuter}
-                    fill="none"
-                    stroke={`url(#bevel-out-${uid})`}
-                    strokeWidth="2.8"
-                    pointerEvents="none"
-                  />
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r={rInner}
-                    fill="none"
-                    stroke={`url(#bevel-in-${uid})`}
-                    strokeWidth="2"
-                    pointerEvents="none"
-                  />
-                  <circle
-                    cx="80"
-                    cy="80"
-                    r={(rInner + rOuter) / 2}
-                    fill="none"
-                    stroke={`url(#spec-${uid})`}
-                    strokeWidth={rOuter - rInner - 2}
-                    pointerEvents="none"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            {legendDots.length > 0 ? (
-              <ul className="donut-clay-legend" aria-hidden="true">
-                {legendDots.map((slice) => (
-                  <li key={slice.id} className="donut-clay-dot" style={{ backgroundColor: slice.color }} />
-                ))}
-              </ul>
-            ) : null}
+              <circle
+                cx="80"
+                cy="80"
+                r={R_OUTER}
+                fill="none"
+                stroke={`url(#bevel-out-${uid})`}
+                strokeWidth="3.2"
+                pointerEvents="none"
+              />
+              <circle
+                cx="80"
+                cy="80"
+                r={R_INNER}
+                fill="none"
+                stroke={`url(#bevel-in-${uid})`}
+                strokeWidth="2.2"
+                pointerEvents="none"
+              />
+              <circle
+                cx="80"
+                cy="80"
+                r={(R_INNER + R_OUTER) / 2}
+                fill="none"
+                stroke={`url(#spec-${uid})`}
+                strokeWidth={R_OUTER - R_INNER - 2}
+                pointerEvents="none"
+              />
+            </svg>
           </div>
         </div>
       </div>
 
       {selected ? (
         <div
-          className="donut-day-card"
+          className="donut-summary-card"
           role="dialog"
-          aria-label={`Resumen del día · ${selected.name}`}
+          aria-label={`Resumen del mes · ${selected.name}`}
           style={{
             borderColor: withAlpha(selected.color, 0.35),
             background: `linear-gradient(160deg, ${withAlpha(selected.color, 0.16)}, color-mix(in srgb, var(--card) 88%, ${selected.color} 12%))`,
@@ -389,26 +378,26 @@ export function DonutChart({ slices, daySummaries, periodLabel = "Período" }: D
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted">Resumen del día</p>
+              <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted">Resumen del mes</p>
               <h3 className="mt-1 flex items-center gap-2 font-display text-2xl tracking-tight">
                 <span className="donut-swatch h-3 w-3" style={{ backgroundColor: selected.color }} />
                 <span className="truncate">{selected.name}</span>
               </h3>
-              <p className="mt-1 text-sm text-muted">{selectedDay?.dateLabel ?? "Hoy"}</p>
+              <p className="mt-1 text-sm text-muted">{periodLabel}</p>
             </div>
             <button type="button" className="rounded-full px-2 py-1 text-sm text-muted" onClick={() => setSelectedId(null)}>
               Cerrar
             </button>
           </div>
 
-          <p className="mt-4 font-display text-3xl tracking-tight tabular-nums">
-            {formatMoney(selectedDay?.amount ?? 0)}
+          <p className="mt-4 font-display text-3xl tracking-tight tabular-nums">{formatMoney(summaryAmount)}</p>
+          <p className="mt-1 text-sm text-muted">
+            Monto del mes · {selected.percent}% del total
           </p>
-          <p className="mt-1 text-sm text-muted">Monto del resumen</p>
 
-          {selectedDay && selectedDay.lines.length > 0 ? (
-            <ul className="mt-4 space-y-2 border-t border-line/70 pt-3">
-              {selectedDay.lines.map((line) => (
+          {summaryLines.length > 0 ? (
+            <ul className="mt-4 max-h-48 space-y-2 overflow-y-auto border-t border-line/70 pt-3">
+              {summaryLines.map((line) => (
                 <li key={line.id} className="flex items-center justify-between gap-3 text-sm">
                   <span className="min-w-0 truncate">{line.label}</span>
                   <span className="shrink-0 tabular-nums font-medium">{formatMoney(line.amount)}</span>
@@ -416,12 +405,10 @@ export function DonutChart({ slices, daySummaries, periodLabel = "Período" }: D
               ))}
             </ul>
           ) : (
-            <p className="mt-4 border-t border-line/70 pt-3 text-sm text-muted">Sin movimientos hoy en esta categoría.</p>
+            <p className="mt-4 border-t border-line/70 pt-3 text-sm text-muted">
+              Sin movimientos este mes en esta categoría.
+            </p>
           )}
-
-          <p className="mt-4 text-xs text-muted">
-            {periodLabel}: {formatMoney(selected.amount)} · {selected.percent}% del total
-          </p>
         </div>
       ) : null}
 
