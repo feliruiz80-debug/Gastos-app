@@ -9,17 +9,17 @@ describe("colores", () => {
     assert.ok(hexToRgb("#e07a4f"));
   });
 
-  it("pasa colores oscuros o flúor a la paleta clara", () => {
+  it("pasa colores viejos a la paleta brillante", () => {
     const upgraded = upgradeDefaultColors(
       [
-        { id: "cat-super", color: "#c4491d" },
-        { id: "cat-sueldo", color: "#22c55e" },
+        { id: "cat-super", color: "#e07a4f" },
+        { id: "cat-transporte", color: "#f0e08a" },
         { id: "cat-custom", color: "#abcdef" },
       ],
       "category",
     );
-    assert.equal(upgraded[0]?.color, "#e07a4f");
-    assert.equal(upgraded[1]?.color, "#5aad78");
+    assert.equal(upgraded[0]?.color, "#ff5c39");
+    assert.equal(upgraded[1]?.color, "#ffe566");
     assert.equal(upgraded[2]?.color, "#abcdef");
   });
 });
