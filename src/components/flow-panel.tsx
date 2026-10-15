@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { formatGroupDate } from "@/lib/dates";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { formatGroupDate, toISODate } from "@/lib/dates";
 import { formatSigned } from "@/lib/money";
 import { lockBodyScroll, unlockBodyScroll } from "@/lib/body-lock";
 import type { CategoryTotal } from "@/lib/stats";
 import type { Account, Category, Transaction } from "@/lib/types";
 import { AnimatedMoney } from "./animated-number";
-import { DonutChart } from "./donut-chart";
+import { DonutChart, type SliceDaySummary } from "./donut-chart";
 
 type FlowPanelProps = {
   type: "income" | "expense";
@@ -36,6 +36,31 @@ export function FlowPanel({
   const byCategory = new Map(categories.map((category) => [category.id, category]));
   const byAccount = new Map(accounts.map((account) => [account.id, account]));
   const sorted = [...transactions].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+  const daySummaries = useMemo(() => {
+    const today = toISODate(new Date());
+    const dateLabel = formatGroupDate(today, today);
+    const categoryNames = new Map(categories.map((category) => [category.id, category.name]));
+    const map: Record<string, SliceDaySummary> = {};
+    for (const item of totals) {
+      if (item.amount <= 0) continue;
+      map[item.category.id] = { amount: 0, dateLabel, lines: [] };
+    }
+    for (const transaction of transactions) {
+      if (transaction.date !== today || transaction.type !== type) continue;
+      const bucket = map[transaction.categoryId];
+      if (!bucket) continue;
+      bucket.amount += transaction.amount;
+      bucket.lines.push({
+        id: transaction.id,
+        label: transaction.note || categoryNames.get(transaction.categoryId) || title,
+        amount: transaction.amount,
+      });
+    }
+    for (const bucket of Object.values(map)) {
+      bucket.lines.sort((a, b) => b.amount - a.amount);
+    }
+    return map;
+  }, [totals, transactions, categories, type, title]);
   const sheetRef = useRef<HTMLElement>(null);
   const startY = useRef<number | null>(null);
   const startX = useRef<number | null>(null);
@@ -145,8 +170,10 @@ export function FlowPanel({
           </button>
         </div>
 
-        <div className="rounded-3xl border border-line/70 bg-card/50 p-4">
+        <div className="rounded-3xl border border-line/70 bg-card/40 p-3 sm:p-4">
           <DonutChart
+            periodLabel={periodLabel}
+            daySummaries={daySummaries}
             slices={shown.map((item) => ({
               id: item.category.id,
               name: item.category.name,
