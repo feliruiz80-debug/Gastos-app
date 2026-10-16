@@ -85,8 +85,46 @@ export type AccountBalance = {
   balance: number;
 };
 
+export type AccountFlow = {
+  accountId: string;
+  inflow: number;
+  outflow: number;
+  transactions: Transaction[];
+};
+
 function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+/** Plata que entró y salió de una cuenta en el período (incluye pases). */
+export function accountFlow(transactions: Transaction[], accountId: string): AccountFlow {
+  let inflow = 0;
+  let outflow = 0;
+  const related: Transaction[] = [];
+
+  for (const transaction of transactions) {
+    if (transaction.type === "transfer") {
+      if (transaction.toAccountId === accountId) {
+        inflow += transaction.amount;
+        related.push(transaction);
+      } else if (transaction.accountId === accountId) {
+        outflow += transaction.amount;
+        related.push(transaction);
+      }
+      continue;
+    }
+    if (transaction.accountId !== accountId) continue;
+    related.push(transaction);
+    if (transaction.type === "income") inflow += transaction.amount;
+    else outflow += transaction.amount;
+  }
+
+  return {
+    accountId,
+    inflow: roundMoney(inflow),
+    outflow: roundMoney(outflow),
+    transactions: related,
+  };
 }
 
 export function accountBalances(accounts: Account[], transactions: Transaction[]): AccountBalance[] {
