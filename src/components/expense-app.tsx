@@ -11,6 +11,7 @@ import { applySeed } from "@/lib/seed";
 import type { SheetPayload } from "@/lib/sheets";
 import {
   accountBalances,
+  accountFlow,
   activeFixedTotal,
   availableBalance,
   categoryBreakdown,
@@ -22,6 +23,7 @@ import {
 } from "@/lib/stats";
 import { loadData, saveData } from "@/lib/storage";
 import type { Account, AppData, Category, FixedExpense, Investment, Transaction, TxType } from "@/lib/types";
+import { AccountPanel } from "./account-panel";
 import { AccountsDialog } from "./accounts-dialog";
 import { BottomNav, type AppTab } from "./bottom-nav";
 import { CategoryDialog } from "./category-dialog";
@@ -57,6 +59,7 @@ export function ExpenseApp() {
   const [syncing, setSyncing] = useState(false);
   const [tab, setTab] = useState<AppTab>("home");
   const [flow, setFlow] = useState<"income" | "expense" | null>(null);
+  const [accountPanelId, setAccountPanelId] = useState<string | null>(null);
   const dataRef = useRef<AppData | null>(data);
   dataRef.current = data;
 
@@ -275,6 +278,7 @@ export function ExpenseApp() {
     }
     commit({ ...data, accounts: data.accounts.filter((account) => account.id !== id) });
     if (accountFilter === id) setAccountFilter("all");
+    if (accountPanelId === id) setAccountPanelId(null);
     showToast("Cuenta eliminada");
     return null;
   }
@@ -478,6 +482,14 @@ export function ExpenseApp() {
   const fixedPaid = fixedPaidIds(data.transactions, month);
   const fixedTotal = activeFixedTotal(fixedList);
   const fixedPending = fixedPendingTotal(fixedList, fixedPaid);
+  const balances = accountBalances(data.accounts, data.transactions);
+  const panelAccount = accountPanelId
+    ? data.accounts.find((account) => account.id === accountPanelId)
+    : undefined;
+  const panelBalance = panelAccount
+    ? (balances.find((item) => item.account.id === panelAccount.id)?.balance ?? panelAccount.openingBalance)
+    : 0;
+  const panelFlow = panelAccount ? accountFlow(period, panelAccount.id) : null;
 
   return (
     <>
@@ -494,7 +506,7 @@ export function ExpenseApp() {
         series={monthSeries(data.transactions, lastMonths(chartAnchor, 6))}
         categoryView={categoryView}
         categoryTotals={categoryBreakdown(period, data.categories, categoryView, scope === "month" ? month : "all")}
-        accountBalances={accountBalances(data.accounts, data.transactions)}
+        accountBalances={balances}
         transactions={filtered}
         categories={data.categories}
         accounts={data.accounts}
@@ -512,7 +524,15 @@ export function ExpenseApp() {
         onAdd={openNew}
         onEdit={openEdit}
         onDelete={askDelete}
-        onOpenFlow={setFlow}
+        onOpenFlow={(type) => {
+          setAccountPanelId(null);
+          setFlow(type);
+        }}
+        onOpenAccount={(accountId) => {
+          setFlow(null);
+          setAccountFilter(accountId);
+          setAccountPanelId(accountId);
+        }}
         onOpenFixed={() => setTab("fixed")}
         onSync={() => void syncSheet()}
       />
@@ -589,6 +609,22 @@ export function ExpenseApp() {
           onClose={() => setFlow(null)}
           onEdit={(transaction) => {
             setFlow(null);
+            openEdit(transaction);
+          }}
+        />
+      ) : null}
+
+      {panelAccount && panelFlow ? (
+        <AccountPanel
+          account={panelAccount}
+          balance={panelBalance}
+          periodLabel={periodLabel}
+          flow={panelFlow}
+          categories={data.categories}
+          accounts={data.accounts}
+          onClose={() => setAccountPanelId(null)}
+          onEdit={(transaction) => {
+            setAccountPanelId(null);
             openEdit(transaction);
           }}
         />

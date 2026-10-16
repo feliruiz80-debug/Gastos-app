@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   accountBalances,
+  accountFlow,
   activeFixedTotal,
   availableBalance,
   balanceOf,
@@ -76,6 +77,19 @@ describe("estadísticas", () => {
     assert.equal(byName["Mercado Pago"], 0 - 200 + 300);
     assert.equal(byName["Tarjeta de crédito"], -80);
     assert.equal(availableBalance(accounts, transactions), 500 + 670);
+  });
+
+  it("suma lo que entró y salió de una cuenta incluyendo pases", () => {
+    const october = inMonth(transactions, "2026-10");
+    const banco = accountFlow(october, "banco");
+    assert.equal(banco.inflow, 1000);
+    assert.equal(banco.outflow, 300);
+    assert.equal(banco.transactions.length, 2);
+
+    const mp = accountFlow(october, "mp");
+    assert.equal(mp.inflow, 300);
+    assert.equal(mp.outflow, 200);
+    assert.equal(mp.transactions.length, 2);
   });
 
   it("suma gastos fijos y detecta los ya registrados en el mes", () => {
