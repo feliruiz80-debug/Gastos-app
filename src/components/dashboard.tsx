@@ -36,6 +36,7 @@ type DashboardProps = {
   onEdit: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
   onOpenFlow: (type: "income" | "expense") => void;
+  onOpenAccount: (accountId: string) => void;
   onOpenFixed: () => void;
   onSync: () => void;
 };
@@ -82,6 +83,7 @@ export function Dashboard(props: DashboardProps) {
     onEdit,
     onDelete,
     onOpenFlow,
+    onOpenAccount,
     onOpenFixed,
     onSync,
   } = props;
@@ -251,15 +253,15 @@ export function Dashboard(props: DashboardProps) {
           <section className="mt-6">
             <div className="mb-3 flex items-end justify-between gap-3">
               <h2 className="font-display text-2xl tracking-tight">Cuentas</h2>
-              <p className="text-sm text-muted">Tocá una para filtrar</p>
+              <p className="text-sm text-muted">Tocá una para ver qué entró y qué salió</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {accountBalances.map((item) => (
                 <button
                   key={item.account.id}
                   type="button"
-                  onClick={() => onAccountFilter(accountFilter === item.account.id ? "all" : item.account.id)}
-                  className={`glass rounded-3xl p-4 text-left ${
+                  onClick={() => onOpenAccount(item.account.id)}
+                  className={`glass rounded-3xl p-4 text-left transition hover:bg-card ${
                     accountFilter === item.account.id ? "border-ink" : ""
                   }`}
                 >
@@ -270,6 +272,7 @@ export function Dashboard(props: DashboardProps) {
                   <p className={`mt-2 font-display text-2xl tracking-tight ${item.balance < 0 ? "text-expense" : ""}`}>
                     <AnimatedMoney value={item.balance} />
                   </p>
+                  <p className="mt-2 text-sm text-muted">Entró y salió</p>
                 </button>
               ))}
             </div>
